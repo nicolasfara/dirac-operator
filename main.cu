@@ -326,7 +326,7 @@ int main() {
 
   // 8 = number of directions times 2 (even/odd)
   // no_links = sizeh * 8
-  posix_memalign((void **)&u_h, ALIGN, 8*sizeof(su3_soa));
+  posix_memalign((void **)&u_h,        ALIGN, 8*sizeof(su3_soa));
   posix_memalign((void **)&fermion1_h, ALIGN, sizeof(vec3_soa));
   posix_memalign((void **)&fermion2_h, ALIGN, sizeof(vec3_soa));
 
