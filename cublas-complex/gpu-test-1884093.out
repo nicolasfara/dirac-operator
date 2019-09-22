@@ -1,0 +1,7 @@
+[DEBUG] Allocation time: 0.000284s
+cublasCgemm() taken: 0.011118s
+cublasGemmEx() taken: 0.011060s
+
+Matrix C1 and C2 are equal
+
+End success

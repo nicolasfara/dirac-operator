@@ -4,10 +4,10 @@ CC=nvcc
 #CC_CFLAGS=-O3 --ptxas-options=-v -lineinfo -gencode arch=compute_37,code=sm_37 -keep
 
 # V100
-#CC_CFLAGS=-O3 -lcublas --ptxas-options=-v -lineinfo -gencode arch=compute_70,code=sm_70 -keep
+CC_CFLAGS=-O3 -lcublas --ptxas-options=-v -lineinfo -gencode arch=compute_70,code=sm_70 -keep
 
 # GTX 1050
-CC_CFLAGS=-O3 -lcublas --ptxas-options=-v -lineinfo -gencode arch=compute_61,code=sm_61 -keep
+#CC_CFLAGS=-O3 -lcublas --ptxas-options=-v -lineinfo -gencode arch=compute_61,code=sm_61 -keep
 
 ###############################################################################
 

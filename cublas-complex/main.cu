@@ -10,6 +10,8 @@
 #define BLKSIZE 1024
 #define ALIGN 128
 
+__device__ bool isValid;
+
 using namespace std;
 
 void inline checkError(cublasStatus_t status, const char *msg)
@@ -37,11 +39,11 @@ __global__ void checkMatrix(const __restrict cuFloatComplex * const m1, const __
   *isValid = true;
 
   if (i < size) {
-    if (abs(cuCrealf(m1[i]) - cuCrealf(m2[i]) > 1e-3)) {
+    if (fabsf(cuCrealf(m1[i]) - cuCrealf(m2[i]) > 1e-3)) {
       *isValid = false;
     }
 
-    if (abs(cuCimagf(m1[i]) - cuCimagf(m2[i]) > 1e-3)) {
+    if (fabsf(cuCimagf(m1[i]) - cuCimagf(m2[i]) > 1e-3)) {
       *isValid = false;
     }
   }
@@ -146,10 +148,11 @@ int main(int argc, char **argv)
   //// end Tensor Core section ////
 
   //// Validation section ////
-  bool isValid = true;
   checkMatrix<<<gridC, block>>>(C1_d, C2_d, C_size, &isValid);
+  bool isValidH;
+  cudaMemcpyFromSymbol(&isValid, &isValidH, sizeof(bool));
 
-  if (isValid) {
+  if (isValidH) {
     printf("Matrix C1 and C2 are equal\n\n");
   } else {
     printf("Matrix C1 and C2 are not equal\n\n");
