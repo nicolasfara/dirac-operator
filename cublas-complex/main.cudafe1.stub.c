@@ -27,7 +27,7 @@ void checkMatrix( const cuFloatComplex *const __cuda_0,const cuFloatComplex *con
 # 51 "main.cu"
 }
 # 1 "main.cudafe1.stub.c"
-static void __nv_cudaEntityRegisterCallback( void **__T9) {  __nv_dummy_param_ref(__T9); __nv_save_fatbinhandle_for_managed_rt(__T9); __cudaRegisterEntry(__T9, ((void ( *)(const cuFloatComplex *const, const cuFloatComplex *const, const unsigned, bool *))checkMatrix), _Z11checkMatrixPK6float2S1_jPb, (-1)); __cudaRegisterEntry(__T9, ((void ( *)(cuFloatComplex *const, const unsigned))fillMatrix), _Z10fillMatrixP6float2j, (-1)); __cudaRegisterVariable(__T9, __shadow_var(isValid,::isValid), 0, 1UL, 0, 0); }
+static void __nv_cudaEntityRegisterCallback( void **__T6) {  __nv_dummy_param_ref(__T6); __nv_save_fatbinhandle_for_managed_rt(__T6); __cudaRegisterEntry(__T6, ((void ( *)(const cuFloatComplex *const, const cuFloatComplex *const, const unsigned, bool *))checkMatrix), _Z11checkMatrixPK6float2S1_jPb, (-1)); __cudaRegisterEntry(__T6, ((void ( *)(cuFloatComplex *const, const unsigned))fillMatrix), _Z10fillMatrixP6float2j, (-1)); __cudaRegisterVariable(__T6, __shadow_var(isValid,::isValid), 0, 1UL, 0, 0); }
 static void __sti____cudaRegisterAll(void) {  __cudaRegisterBinary(__nv_cudaEntityRegisterCallback);  }
 
 #pragma GCC diagnostic pop
