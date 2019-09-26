@@ -38234,30 +38234,10 @@ dim3 gridDim(((16 + 1024) - 1) / 16, ((16 + 1024) - 1) / 16);
 (__cudaPushCallConfiguration(gridDim, blockDim)) ? (void)0 : fill_zero(t_mat, t_vec, t_res); 
 # 158
 (__cudaPushCallConfiguration(1, mat_size)) ? (void)0 : compose_matrix(t_mat, t_vec, mat, vec); 
-# 159
-(__cudaPushCallConfiguration(1, 32)) ? (void)0 : dot_wmma16x16(t_mat, t_vec, t_res); 
 # 161
 float *t1, *t2, *t3, *t4; 
-# 162
-cudaMalloc((void **)(&t1), sizeof(float) * (3)); 
-# 163
-cudaMalloc((void **)(&t2), sizeof(float) * (3)); 
-# 164
-cudaMalloc((void **)(&t3), sizeof(float) * (3)); 
-# 165
-cudaMalloc((void **)(&t4), sizeof(float) * (3)); 
-# 167
-(__cudaPushCallConfiguration(1, mat_size)) ? (void)0 : isolate_vec(t_res, t1, t2, t3, t4); 
 # 169
 float *t_re, *t_im; 
-# 170
-cudaMalloc((void **)(&t_re), sizeof(float) * (3)); 
-# 171
-cudaMalloc((void **)(&t_im), sizeof(float) * (3)); 
-# 173
-(__cudaPushCallConfiguration(1, 3)) ? (void)0 : add_sub_vec(t1, t2, t3, t4, t_re, t_im); 
-# 174
-(__cudaPushCallConfiguration(1, 3)) ? (void)0 : combine(t_re, t_im, res); 
 # 176
 cudaFree(t_mat); 
 # 177
