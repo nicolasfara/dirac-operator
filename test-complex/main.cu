@@ -139,7 +139,7 @@ __global__ void combine(float *t_re, float *t_im, cuDoubleComplex *res)
   }
 }
 
-void complex_mma(cuDoubleComplex *mat, cuDoubleComplex *vec, cuDoubleComplex *res)
+void complex_mma(__restrict cuDoubleComplex * const mat, __restrict cuDoubleComplex * const vec, __restrict cuDoubleComplex * const res)
 {
   const size_t mat_size = 16 * 16;
 
@@ -184,12 +184,50 @@ void complex_mma(cuDoubleComplex *mat, cuDoubleComplex *vec, cuDoubleComplex *re
   cudaFree(t_im);
 }
 
-__global__ void fill_matrix(half *m, const unsigned size)
+__global__ void fill_matrix(__restrict half * const m, const unsigned size)
 {
   const unsigned i = threadIdx.x + blockIdx.x * blockDim.x;
   if (i < size) {
     m[i] = __float2half((float) i);
   }
+}
+
+
+/////////////////////// TESTING PURPOSE ONLY ////////////////////////////////
+__global__ void mat_vec_mul(cuDoubleComplex *matrix, cuDoubleComplex *in_vect, cuDoubleComplex *out_vect)
+{
+  cuDoubleComplex vec0 = in_vect[0];
+  cuDoubleComplex vec1 = in_vect[1];
+  cuDoubleComplex vec2 = in_vect[2];
+
+  cuDoubleComplex mat00 = matrix[0];
+  cuDoubleComplex mat01 = matrix[1];
+  cuDoubleComplex mat02 = matrix[2];
+
+  cuDoubleComplex mat10 = matrix[3];
+  cuDoubleComplex mat11 = matrix[4];
+  cuDoubleComplex mat12 = matrix[5];
+
+  cuDoubleComplex mat20 = matrix[6];
+  cuDoubleComplex mat21 = matrix[7];
+  cuDoubleComplex mat22 = matrix[8];
+
+//Multiply 3rd row by eta
+  //mat20 = make_cuDoubleComplex(cuCreal(mat20)*eta, cuCimag(mat20)*eta);
+  //mat21 = make_cuDoubleComplex(cuCreal(mat21)*eta, cuCimag(mat21)*eta);
+  //mat22 = make_cuDoubleComplex(cuCreal(mat22)*eta, cuCimag(mat22)*eta);
+
+  out_vect[0] = cuCadd( cuCadd( cuCmul( mat00, vec0 ),
+                             cuCmul( mat01, vec1 )),
+                             cuCmul( mat02, vec2 ));
+
+  out_vect[1] = cuCadd( cuCadd( cuCmul( mat10, vec0 ),
+                             cuCmul( mat11, vec1 )),
+                             cuCmul( mat12, vec2 ));
+
+  out_vect[2] = cuCadd( cuCadd( cuCmul( mat20, vec0 ),
+                                 cuCmul( mat21, vec1 )),
+                                 cuCmul( mat22, vec2 ));
 }
 
 int main(int argc, char **argv)
@@ -291,6 +329,24 @@ int main(int argc, char **argv)
 
   printf("\n\n\n Final  Result\n\n");
 
+  for (unsigned i = 0; i < 3; i++) {
+    printf("IDX %d R: %.1f - I: %.1f\n", i, cuCreal(res[i]), cuCimag(res[i]));
+  }
+
+  printf("\n\nLegacy mode\n\n");
+
+  cudaEventRecord(start, 0);
+
+  mat_vec_mul<<<1, 1>>>(d_mat, d_vec, d_res);
+  
+  cudaEventRecord(stop, 0);
+  cudaEventSynchronize(stop);
+  cudaEventElapsedTime(&elapsed, start, stop);
+  elapsed /= 1000.0f;
+
+  printf("Time elapsed: %f\n\n", elapsed);
+
+  cudaMemcpy(res, d_res, sizeof(d_res[0]) * 3, cudaMemcpyDeviceToHost);
   for (unsigned i = 0; i < 3; i++) {
     printf("IDX %d R: %.1f - I: %.1f\n", i, cuCreal(res[i]), cuCimag(res[i]));
   }

@@ -15,7 +15,8 @@ extern void __device_stub__Z14compose_matrixP6__halfS0_P7double2S2_(half *, half
 extern void __device_stub__Z11isolate_vecPfS_S_S_S_(float *, float *, float *, float *, float *);
 extern void __device_stub__Z11add_sub_vecPfS_S_S_S_S_(float *, float *, float *, float *, float *, float *);
 extern void __device_stub__Z7combinePfS_P7double2(float *, float *, cuDoubleComplex *);
-extern void __device_stub__Z11fill_matrixP6__halfj(half *, const unsigned);
+extern void __device_stub__Z11fill_matrixP6__halfj(half *const, const unsigned);
+extern void __device_stub__Z11mat_vec_mulP7double2S0_S0_(cuDoubleComplex *, cuDoubleComplex *, cuDoubleComplex *);
 static void __nv_cudaEntityRegisterCallback(void **);
 static void __sti____cudaRegisterAll(void) __attribute__((__constructor__));
 void __device_stub__Z13dot_wmma16x16P6__halfS0_Pf(half *__par0, half *__par1, float *__par2){__cudaLaunchPrologue(3);__cudaSetupArgSimple(__par0, 0UL);__cudaSetupArgSimple(__par1, 8UL);__cudaSetupArgSimple(__par2, 16UL);__cudaLaunch(((char *)((void ( *)(half *, half *, float *))dot_wmma16x16)));}
@@ -91,9 +92,9 @@ void combine( float *__cuda_0,float *__cuda_1,cuDoubleComplex *__cuda_2)
 
 }
 # 1 "main.cudafe1.stub.c"
-void __device_stub__Z11fill_matrixP6__halfj( half *__par0,  const unsigned __par1) {  __cudaLaunchPrologue(2); __cudaSetupArgSimple(__par0, 0UL); __cudaSetupArgSimple(__par1, 8UL); __cudaLaunch(((char *)((void ( *)(half *, const unsigned))fill_matrix))); }
+void __device_stub__Z11fill_matrixP6__halfj( half *const __par0,  const unsigned __par1) {  __cudaLaunchPrologue(2); __cudaSetupArgSimple(__par0, 0UL); __cudaSetupArgSimple(__par1, 8UL); __cudaLaunch(((char *)((void ( *)(half *const, const unsigned))fill_matrix))); }
 # 187 "main.cu"
-void fill_matrix( half *__cuda_0,const unsigned __cuda_1)
+void fill_matrix( half *const __cuda_0,const unsigned __cuda_1)
 # 188 "main.cu"
 {__device_stub__Z11fill_matrixP6__halfj( __cuda_0,__cuda_1);
 
@@ -102,7 +103,15 @@ void fill_matrix( half *__cuda_0,const unsigned __cuda_1)
 
 }
 # 1 "main.cudafe1.stub.c"
-static void __nv_cudaEntityRegisterCallback( void **__T52) {  __nv_dummy_param_ref(__T52); __nv_save_fatbinhandle_for_managed_rt(__T52); __cudaRegisterEntry(__T52, ((void ( *)(half *, const unsigned))fill_matrix), _Z11fill_matrixP6__halfj, (-1)); __cudaRegisterEntry(__T52, ((void ( *)(float *, float *, cuDoubleComplex *))combine), _Z7combinePfS_P7double2, (-1)); __cudaRegisterEntry(__T52, ((void ( *)(float *, float *, float *, float *, float *, float *))add_sub_vec), _Z11add_sub_vecPfS_S_S_S_S_, (-1)); __cudaRegisterEntry(__T52, ((void ( *)(float *, float *, float *, float *, float *))isolate_vec), _Z11isolate_vecPfS_S_S_S_, (-1)); __cudaRegisterEntry(__T52, ((void ( *)(half *, half *, cuDoubleComplex *, cuDoubleComplex *))compose_matrix), _Z14compose_matrixP6__halfS0_P7double2S2_, (-1)); __cudaRegisterEntry(__T52, ((void ( *)(half *, half *, float *))fill_zero), _Z9fill_zeroP6__halfS0_Pf, (-1)); __cudaRegisterEntry(__T52, ((void ( *)(float *, float *, float *, const unsigned))mat_add), _Z7mat_addPfS_S_j, (-1)); __cudaRegisterEntry(__T52, ((void ( *)(float *, float *, float *, const unsigned))mat_sub), _Z7mat_subPfS_S_j, (-1)); __cudaRegisterEntry(__T52, ((void ( *)(half *, half *, float *))dot_wmma16x16), _Z13dot_wmma16x16P6__halfS0_Pf, (-1)); }
+void __device_stub__Z11mat_vec_mulP7double2S0_S0_( cuDoubleComplex *__par0,  cuDoubleComplex *__par1,  cuDoubleComplex *__par2) {  __cudaLaunchPrologue(3); __cudaSetupArgSimple(__par0, 0UL); __cudaSetupArgSimple(__par1, 8UL); __cudaSetupArgSimple(__par2, 16UL); __cudaLaunch(((char *)((void ( *)(cuDoubleComplex *, cuDoubleComplex *, cuDoubleComplex *))mat_vec_mul))); }
+# 197 "main.cu"
+void mat_vec_mul( cuDoubleComplex *__cuda_0,cuDoubleComplex *__cuda_1,cuDoubleComplex *__cuda_2)
+# 198 "main.cu"
+{__device_stub__Z11mat_vec_mulP7double2S0_S0_( __cuda_0,__cuda_1,__cuda_2);
+# 231 "main.cu"
+}
+# 1 "main.cudafe1.stub.c"
+static void __nv_cudaEntityRegisterCallback( void **__T232) {  __nv_dummy_param_ref(__T232); __nv_save_fatbinhandle_for_managed_rt(__T232); __cudaRegisterEntry(__T232, ((void ( *)(cuDoubleComplex *, cuDoubleComplex *, cuDoubleComplex *))mat_vec_mul), _Z11mat_vec_mulP7double2S0_S0_, (-1)); __cudaRegisterEntry(__T232, ((void ( *)(half *const, const unsigned))fill_matrix), _Z11fill_matrixP6__halfj, (-1)); __cudaRegisterEntry(__T232, ((void ( *)(float *, float *, cuDoubleComplex *))combine), _Z7combinePfS_P7double2, (-1)); __cudaRegisterEntry(__T232, ((void ( *)(float *, float *, float *, float *, float *, float *))add_sub_vec), _Z11add_sub_vecPfS_S_S_S_S_, (-1)); __cudaRegisterEntry(__T232, ((void ( *)(float *, float *, float *, float *, float *))isolate_vec), _Z11isolate_vecPfS_S_S_S_, (-1)); __cudaRegisterEntry(__T232, ((void ( *)(half *, half *, cuDoubleComplex *, cuDoubleComplex *))compose_matrix), _Z14compose_matrixP6__halfS0_P7double2S2_, (-1)); __cudaRegisterEntry(__T232, ((void ( *)(half *, half *, float *))fill_zero), _Z9fill_zeroP6__halfS0_Pf, (-1)); __cudaRegisterEntry(__T232, ((void ( *)(float *, float *, float *, const unsigned))mat_add), _Z7mat_addPfS_S_j, (-1)); __cudaRegisterEntry(__T232, ((void ( *)(float *, float *, float *, const unsigned))mat_sub), _Z7mat_subPfS_S_j, (-1)); __cudaRegisterEntry(__T232, ((void ( *)(half *, half *, float *))dot_wmma16x16), _Z13dot_wmma16x16P6__halfS0_Pf, (-1)); }
 static void __sti____cudaRegisterAll(void) {  __cudaRegisterBinary(__nv_cudaEntityRegisterCallback);  }
 
 #pragma GCC diagnostic pop

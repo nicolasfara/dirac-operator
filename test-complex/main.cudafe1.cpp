@@ -38209,7 +38209,7 @@ if (i < (3)) {
 } 
 #endif
 # 142 "main.cu"
-void complex_mma(cuDoubleComplex *mat, cuDoubleComplex *vec, cuDoubleComplex *res) 
+void complex_mma(cuDoubleComplex *const mat, cuDoubleComplex *const vec, cuDoubleComplex *const res) 
 # 143
 { 
 # 144
@@ -38279,7 +38279,7 @@ cudaFree(t_im);
 # 185
 } 
 # 187
-void fill_matrix(half *m, const unsigned size) ;
+void fill_matrix(half *const m, const unsigned size) ;
 #if 0
 # 188
 { 
@@ -38294,127 +38294,189 @@ if (i < size) {
 # 193
 } 
 #endif
-# 195 "main.cu"
-int main(int argc, char **argv) 
-# 196
-{ 
+# 197 "main.cu"
+void mat_vec_mul(cuDoubleComplex *matrix, cuDoubleComplex *in_vect, cuDoubleComplex *out_vect) ;
+#if 0
 # 198
-size_t mat_size = (16 * 16); 
+{ 
+# 199
+cuDoubleComplex vec0 = in_vect[0]; 
 # 200
-half *a_h; 
+cuDoubleComplex vec1 = in_vect[1]; 
 # 201
-half *b_h; 
-# 202
-float *c_h; 
+cuDoubleComplex vec2 = in_vect[2]; 
+# 203
+cuDoubleComplex mat00 = matrix[0]; 
+# 204
+cuDoubleComplex mat01 = matrix[1]; 
+# 205
+cuDoubleComplex mat02 = matrix[2]; 
+# 207
+cuDoubleComplex mat10 = matrix[3]; 
 # 208
-a_h = ((half *)malloc(sizeof(half) * mat_size)); 
+cuDoubleComplex mat11 = matrix[4]; 
 # 209
-b_h = ((half *)malloc(sizeof(half) * mat_size)); 
-# 210
-c_h = ((float *)malloc(sizeof(float) * mat_size)); 
-# 230 "main.cu"
-half *a_d; 
+cuDoubleComplex mat12 = matrix[5]; 
+# 211
+cuDoubleComplex mat20 = matrix[6]; 
+# 212
+cuDoubleComplex mat21 = matrix[7]; 
+# 213
+cuDoubleComplex mat22 = matrix[8]; 
+# 220
+(out_vect[0]) = cuCadd(cuCadd(cuCmul(mat00, vec0), cuCmul(mat01, vec1)), cuCmul(mat02, vec2)); 
+# 224
+(out_vect[1]) = cuCadd(cuCadd(cuCmul(mat10, vec0), cuCmul(mat11, vec1)), cuCmul(mat12, vec2)); 
+# 228
+(out_vect[2]) = cuCadd(cuCadd(cuCmul(mat20, vec0), cuCmul(mat21, vec1)), cuCmul(mat22, vec2)); 
 # 231
-half *b_d; 
-# 232
-float *c_d; 
+} 
+#endif
+# 233 "main.cu"
+int main(int argc, char **argv) 
 # 234
-cudaMalloc((void **)(&a_d), sizeof(half) * mat_size); 
-# 235
-cudaMalloc((void **)(&b_d), sizeof(half) * mat_size); 
+{ 
 # 236
-cudaMalloc((void **)(&c_d), sizeof(float) * mat_size); 
+size_t mat_size = (16 * 16); 
 # 238
-cudaMemcpy(a_d, a_h, sizeof(half) * mat_size, cudaMemcpyHostToDevice); 
+half *a_h; 
 # 239
-cudaMemcpy(b_d, b_h, sizeof(half) * mat_size, cudaMemcpyHostToDevice); 
+half *b_h; 
 # 240
-cudaMemcpy(c_d, c_h, sizeof(float) * mat_size, cudaMemcpyHostToDevice); 
-# 242
-(__cudaPushCallConfiguration(1, 32)) ? (void)0 : dot_wmma16x16(a_d, b_d, c_d); 
-# 244
-cudaMemcpy(c_h, c_d, sizeof(float) * mat_size, cudaMemcpyDeviceToHost); 
-# 253 "main.cu"
-printf("\n\nLets cmon\n\n"); 
-# 255
-cuDoubleComplex *mat = (cuDoubleComplex *)malloc(sizeof(cuDoubleComplex) * (9)); 
-# 256
-cuDoubleComplex *vec = (cuDoubleComplex *)malloc(sizeof(cuDoubleComplex) * (3)); 
-# 257
-cuDoubleComplex *res = (cuDoubleComplex *)malloc(sizeof(cuDoubleComplex) * (3)); 
-# 259
-for (unsigned i = (0); i < (9); i++) { 
-# 260
-(mat[i]) = make_cuDoubleComplex((double)1, (double)1); }  
-# 262
-for (unsigned i = (0); i < (3); i++) { 
-# 263
-(vec[i]) = make_cuDoubleComplex((double)1, (double)1); }  
-# 265
-cuDoubleComplex *d_mat, *d_vec, *d_res; 
-# 266
-cudaMalloc((void **)(&d_mat), sizeof(cuDoubleComplex) * (9)); 
-# 267
-cudaMalloc((void **)(&d_vec), sizeof(cuDoubleComplex) * (3)); 
-# 268
-cudaMalloc((void **)(&d_res), sizeof(cuDoubleComplex) * (3)); 
+float *c_h; 
+# 246
+a_h = ((half *)malloc(sizeof(half) * mat_size)); 
+# 247
+b_h = ((half *)malloc(sizeof(half) * mat_size)); 
+# 248
+c_h = ((float *)malloc(sizeof(float) * mat_size)); 
+# 268 "main.cu"
+half *a_d; 
 # 269
-cudaMemcpy(d_mat, mat, sizeof (mat[0]) * (9), cudaMemcpyHostToDevice); 
+half *b_d; 
 # 270
-cudaMemcpy(d_vec, vec, sizeof (vec[0]) * (3), cudaMemcpyHostToDevice); 
+float *c_d; 
 # 272
-cudaEvent_t start, stop; 
+cudaMalloc((void **)(&a_d), sizeof(half) * mat_size); 
 # 273
-cudaEventCreate(&start); 
+cudaMalloc((void **)(&b_d), sizeof(half) * mat_size); 
 # 274
-cudaEventCreate(&stop); 
-# 275
-float elapsed; 
+cudaMalloc((void **)(&c_d), sizeof(float) * mat_size); 
+# 276
+cudaMemcpy(a_d, a_h, sizeof(half) * mat_size, cudaMemcpyHostToDevice); 
 # 277
-printf("compute...\n\n"); 
-# 279
-cudaEventRecord(start, 0); 
-# 281
-complex_mma(d_mat, d_vec, d_res); 
-# 283
-cudaEventRecord(stop, 0); 
-# 284
-cudaEventSynchronize(stop); 
-# 285
-cudaEventElapsedTime(&elapsed, start, stop); 
-# 286
-elapsed /= (1000.0F); 
-# 288
-printf("Time elapsed: %f\n\n", elapsed); 
-# 290
-cudaMemcpy(res, d_res, sizeof (d_res[0]) * (3), cudaMemcpyDeviceToHost); 
-# 292
-printf("\n\n\n Final  Result\n\n"); 
+cudaMemcpy(b_d, b_h, sizeof(half) * mat_size, cudaMemcpyHostToDevice); 
+# 278
+cudaMemcpy(c_d, c_h, sizeof(float) * mat_size, cudaMemcpyHostToDevice); 
+# 280
+(__cudaPushCallConfiguration(1, 32)) ? (void)0 : dot_wmma16x16(a_d, b_d, c_d); 
+# 282
+cudaMemcpy(c_h, c_d, sizeof(float) * mat_size, cudaMemcpyDeviceToHost); 
+# 291 "main.cu"
+printf("\n\nLets cmon\n\n"); 
+# 293
+cuDoubleComplex *mat = (cuDoubleComplex *)malloc(sizeof(cuDoubleComplex) * (9)); 
 # 294
-for (unsigned i = (0); i < (3); i++) { 
+cuDoubleComplex *vec = (cuDoubleComplex *)malloc(sizeof(cuDoubleComplex) * (3)); 
 # 295
-printf("IDX %d R: %.1f - I: %.1f\n", i, cuCreal(res[i]), cuCimag(res[i])); 
-# 296
-}  
+cuDoubleComplex *res = (cuDoubleComplex *)malloc(sizeof(cuDoubleComplex) * (3)); 
+# 297
+for (unsigned i = (0); i < (9); i++) { 
 # 298
-free(c_h); 
-# 299
-free(mat); 
+(mat[i]) = make_cuDoubleComplex((double)1, (double)1); }  
 # 300
-free(vec); 
-# 302
-cudaFree(a_d); 
+for (unsigned i = (0); i < (3); i++) { 
+# 301
+(vec[i]) = make_cuDoubleComplex((double)1, (double)1); }  
 # 303
-cudaFree(b_d); 
+cuDoubleComplex *d_mat, *d_vec, *d_res; 
 # 304
-cudaFree(c_d); 
+cudaMalloc((void **)(&d_mat), sizeof(cuDoubleComplex) * (9)); 
 # 305
-cudaFree(d_mat); 
+cudaMalloc((void **)(&d_vec), sizeof(cuDoubleComplex) * (3)); 
 # 306
-cudaFree(d_vec); 
+cudaMalloc((void **)(&d_res), sizeof(cuDoubleComplex) * (3)); 
+# 307
+cudaMemcpy(d_mat, mat, sizeof (mat[0]) * (9), cudaMemcpyHostToDevice); 
 # 308
+cudaMemcpy(d_vec, vec, sizeof (vec[0]) * (3), cudaMemcpyHostToDevice); 
+# 310
+cudaEvent_t start, stop; 
+# 311
+cudaEventCreate(&start); 
+# 312
+cudaEventCreate(&stop); 
+# 313
+float elapsed; 
+# 315
+printf("compute...\n\n"); 
+# 317
+cudaEventRecord(start, 0); 
+# 319
+complex_mma(d_mat, d_vec, d_res); 
+# 321
+cudaEventRecord(stop, 0); 
+# 322
+cudaEventSynchronize(stop); 
+# 323
+cudaEventElapsedTime(&elapsed, start, stop); 
+# 324
+elapsed /= (1000.0F); 
+# 326
+printf("Time elapsed: %f\n\n", elapsed); 
+# 328
+cudaMemcpy(res, d_res, sizeof (d_res[0]) * (3), cudaMemcpyDeviceToHost); 
+# 330
+printf("\n\n\n Final  Result\n\n"); 
+# 332
+for (unsigned i = (0); i < (3); i++) { 
+# 333
+printf("IDX %d R: %.1f - I: %.1f\n", i, cuCreal(res[i]), cuCimag(res[i])); 
+# 334
+}  
+# 336
+printf("\n\nLegacy mode\n\n"); 
+# 338
+cudaEventRecord(start, 0); 
+# 340
+(__cudaPushCallConfiguration(1, 1)) ? (void)0 : mat_vec_mul(d_mat, d_vec, d_res); 
+# 342
+cudaEventRecord(stop, 0); 
+# 343
+cudaEventSynchronize(stop); 
+# 344
+cudaEventElapsedTime(&elapsed, start, stop); 
+# 345
+elapsed /= (1000.0F); 
+# 347
+printf("Time elapsed: %f\n\n", elapsed); 
+# 349
+cudaMemcpy(res, d_res, sizeof (d_res[0]) * (3), cudaMemcpyDeviceToHost); 
+# 350
+for (unsigned i = (0); i < (3); i++) { 
+# 351
+printf("IDX %d R: %.1f - I: %.1f\n", i, cuCreal(res[i]), cuCimag(res[i])); 
+# 352
+}  
+# 354
+free(c_h); 
+# 355
+free(mat); 
+# 356
+free(vec); 
+# 358
+cudaFree(a_d); 
+# 359
+cudaFree(b_d); 
+# 360
+cudaFree(c_d); 
+# 361
+cudaFree(d_mat); 
+# 362
+cudaFree(d_vec); 
+# 364
 return 0; 
-# 309
+# 365
 } 
 
 # 1 "main.cudafe1.stub.c"
