@@ -20,7 +20,7 @@ __global__ void dot_wmma16x16(half *a, half *b, float *c)
   wmma::store_matrix_sync(c, c_frag, 16, wmma::mem_row_major);
 }
 
-__global__ void mat_sub(half *a, half *b, half *res, const unsigned size)
+__global__ void mat_sub(float *a, float *b, float *res, const unsigned size)
 {
   const unsigned i = threadIdx.x + blockDim.x * blockIdx.x;
   if (i < size) {
@@ -28,7 +28,7 @@ __global__ void mat_sub(half *a, half *b, half *res, const unsigned size)
   }
 }
 
-__global__ void mat_add(half *a, half *b, half *res, const unsigned size)
+__global__ void mat_add(float *a, float *b, float *res, const unsigned size)
 {
   const unsigned i = threadIdx.x + blockDim.x * blockIdx.x;
   if (i < size) {
@@ -106,7 +106,40 @@ __global__ void compose_matrix(half *t_mat, half *t_vec, cuDoubleComplex *mat, c
   if (gi == 153) _sub_vec_imag(t_vec + 153, vec);
 }
 
-void complex_mma(cuDoubleComplex *mat, cuDoubleComplex *vec, const unsigned size)
+__host__ __device__ static inline void _get_vec(float *mat, float *t)
+{
+  t[0] = *mat;
+  t[1] = *(mat+16);
+  t[2] = *(mat+32);
+}
+
+__global__ void isolate_vec(float *mat, float *t1, float *t2, float *t3, float *t4)
+{
+  const unsigned gi = threadIdx.x + blockIdx.x * blockDim.x;
+  if (gi == 0) _get_vec(mat, t1); 
+  if (gi == 51) _get_vec(mat+51, t2); 
+  if (gi == 102) _get_vec(mat+102, t3); 
+  if (gi == 153) _get_vec(mat+153, t4); 
+}
+
+__global__ void add_sub_vec(float *t1, float *t2, float *t3, float *t4, float *t_re, float *t_im)
+{
+  const unsigned i = threadIdx.x + blockIdx.x * blockDim.x;
+  if (i < 3) {
+    t_re[i] = t1[i] - t2[i];
+    t_im[i] = t3[i] + t4[i];
+  }
+}
+
+__global__ void combine(float *t_re, float *t_im, cuDoubleComplex *res)
+{
+  const unsigned i = threadIdx.x + blockIdx.x * blockDim.x;
+  if (i < 3) {
+    res[i] = make_cuDoubleComplex((double) t_re[i], (double) t_im[i]);
+  }
+}
+
+void complex_mma(cuDoubleComplex *mat, cuDoubleComplex *vec, cuDoubleComplex *res)
 {
   const size_t mat_size = 16 * 16;
 
@@ -123,37 +156,32 @@ void complex_mma(cuDoubleComplex *mat, cuDoubleComplex *vec, const unsigned size
 
   fill_zero<<<gridDim, blockDim>>>(t_mat, t_vec, t_res);
   compose_matrix<<<1, mat_size>>>(t_mat, t_vec, mat, vec);
-
-  half *h_t_mat = (half *) malloc(sizeof(half) * mat_size);
-  cudaMemcpy(h_t_mat, t_mat, sizeof(half) *mat_size, cudaMemcpyDeviceToHost);
-  printf("Composed matrix:\n");
-  for (unsigned i = 0; i < 16; i++) {
-    for (unsigned j = 0; j < 16; j++) {
-      printf("%.1f ", __half2float(h_t_mat[j + 16*i]));
-    }
-    printf("\n");
-  }
-      
-
   dot_wmma16x16<<<1, WARP_SIZE>>>(t_mat, t_vec, t_res);
 
-  float *p_res = (float *) malloc(sizeof(float) * mat_size);
-  cudaMemcpy(p_res, t_res, sizeof(float) * mat_size, cudaMemcpyDeviceToHost);
+  float *t1, *t2, *t3, *t4;
+  cudaMalloc((void **)&t1, sizeof(float) * 3);
+  cudaMalloc((void **)&t2, sizeof(float) * 3);
+  cudaMalloc((void **)&t3, sizeof(float) * 3);
+  cudaMalloc((void **)&t4, sizeof(float) * 3);
 
-  for (unsigned i = 0; i < 16; i++){
-    for (unsigned j = 0; j < 16; j++){
-      printf("%.2f ", p_res[j + 16*i]);
-    }
-    printf("\n");
-  }
+  isolate_vec<<<1, mat_size>>>(t_res, t1, t2, t3, t4);
 
-  // Padding matrix to be used with tensor core
-  //matrix_padding_16x16<<<gridDim, blockDim>>>(a, a_re, a_im);
-  //vector_padding_16x16<<<gridDim, blockDim>>>(b, b_re, b_im);
+  float *t_re, *t_im;
+  cudaMalloc((void **)&t_re, sizeof(float) * 3);
+  cudaMalloc((void **)&t_im, sizeof(float) * 3);
+  
+  add_sub_vec<<<1, 3>>>(t1, t2, t3, t4, t_re, t_im);
+  combine<<<1, 3>>>(t_re, t_im, res);
 
   cudaFree(t_mat);
   cudaFree(t_vec);
   cudaFree(t_res);
+  cudaFree(t1);
+  cudaFree(t2);
+  cudaFree(t3);
+  cudaFree(t4);
+  cudaFree(t_re);
+  cudaFree(t_im);
 }
 
 __global__ void fill_matrix(half *m, const unsigned size)
@@ -181,6 +209,7 @@ int main(int argc, char **argv)
   b_h = (half *) malloc(sizeof(half) * mat_size);
   c_h = (float *) malloc(sizeof(float) * mat_size);
 
+#ifdef DBUG
   for (unsigned i = 0; i < mat_size; i++) {
     a_h[i] = __float2half((float) i);
     printf("%f ", __half2float(a_h[i]));
@@ -196,6 +225,7 @@ int main(int argc, char **argv)
     printf("%f ", c_h[i]);
   }
   printf("\n\n");
+#endif
 
   half *a_d;
   half *b_d;
@@ -213,15 +243,18 @@ int main(int argc, char **argv)
 
   cudaMemcpy(c_h, c_d, sizeof(float) * mat_size, cudaMemcpyDeviceToHost);
 
+#ifdef DEBUG
   printf("\n\n");
   for (unsigned i = 0; i < mat_size; i++) {
     printf("%f ", __half2float(c_h[i]));
   }
+#endif
 
   printf("\n\nLets cmon\n\n");
 
   cuDoubleComplex *mat = (cuDoubleComplex *) malloc(sizeof(cuDoubleComplex) * 9);
   cuDoubleComplex *vec = (cuDoubleComplex *) malloc(sizeof(cuDoubleComplex) * 3);
+  cuDoubleComplex *res = (cuDoubleComplex *) malloc(sizeof(cuDoubleComplex) * 3);
 
   for (unsigned i = 0; i < 9; i++)
     mat[i] = make_cuDoubleComplex((double) 1, (double) 1);
@@ -229,15 +262,38 @@ int main(int argc, char **argv)
   for (unsigned i = 0; i < 3; i++)
     vec[i] = make_cuDoubleComplex((double) 1, (double) 1);
 
-  cuDoubleComplex *d_mat, *d_vec;
+  cuDoubleComplex *d_mat, *d_vec, *d_res;
   cudaMalloc((void **)&d_mat, sizeof(cuDoubleComplex) * 9);
   cudaMalloc((void **)&d_vec, sizeof(cuDoubleComplex) * 3);
+  cudaMalloc((void **)&d_res, sizeof(cuDoubleComplex) * 3);
   cudaMemcpy(d_mat, mat, sizeof(mat[0]) * 9, cudaMemcpyHostToDevice);
   cudaMemcpy(d_vec, vec, sizeof(vec[0]) * 3, cudaMemcpyHostToDevice);
 
+  cudaEvent_t start, stop;
+  cudaEventCreate(&start);
+  cudaEventCreate(&stop);
+  float elapsed;
+
   printf("compute...\n\n");
 
-  complex_mma(d_mat, d_vec, 3);
+  cudaEventRecord(start, 0);
+
+  complex_mma(d_mat, d_vec, d_res);
+
+  cudaEventRecord(stop, 0);
+  cudaEventSynchronize(stop);
+  cudaEventElapsedTime(&elapsed, start, stop);
+  elapsed /= 1000.0f;
+
+  printf("Time elapsed: %f\n\n", elapsed);
+
+  cudaMemcpy(res, d_res, sizeof(d_res[0]) * 3, cudaMemcpyDeviceToHost);
+
+  printf("\n\n\n Final  Result\n\n");
+
+  for (unsigned i = 0; i < 3; i++) {
+    printf("IDX %d R: %.1f - I: %.1f\n", i, cuCreal(res[i]), cuCimag(res[i]));
+  }
 
   free(c_h);
   free(mat);
