@@ -36,41 +36,6 @@ __global__ void mat_add(half *a, half *b, half *res, const unsigned size)
   }
 }
 
-/*__global__ void matrix_padding_16x16(cuDoubleComplex *a, half *re, half *im)
-{
-  const unsigned i = threadIdx.x + blockIdx.x * blockDim.x;
-  const unsigned j = threadIdx.y + blockIdx.y * blockDim.y;
-  if (i < 16 && j < 16) {
-    if (i < 3 && j < 3){
-      re[j + 3*i] = __float2half((float) cuCreal(a[j + 3*i]));
-      im[j + 3*i] = __float2half((float) cuCimag(a[j + 3*i]));
-    } else {
-      re[j + 3*i] = __float2half(0.0f);
-      im[j + 3*i] = __float2half(0.0f);
-    }
-  }
-}
-
-__global__ void vector_padding_16x16(cuDoubleComplex *a, half *re, half *im)
-{
-  const unsigned i = threadIdx.x + blockIdx.x * blockDim.x;
-  const unsigned j = threadIdx.y + blockIdx.y * blockDim.y;
-  if (i < 16 && j < 16) {
-    if (i < 3 && j < 1) {
-      re[j + 3*i] = __float2half((float) cuCreal(a[j + 3*i]));
-      im[j + 3*i] = __float2half((float) cuCimag(a[j + 3*i]));
-    } else {
-      re[j + 3*i] = __float2half(0.0f);
-      im[j + 3*i] = __float2half(0.0f);
-    }
-  }
-}*/
-
-__host__ __device__ static inline half* IDX(half *m, unsigned i, unsigned j, unsigned size)
-{
-  return m + (j + i*size);
-}
-
 __global__ void fill_zero(half *re, half *im, float *c)
 {
   const unsigned i = threadIdx.x + blockIdx.x * blockDim.x;
@@ -85,36 +50,46 @@ __global__ void fill_zero(half *re, half *im, float *c)
 
 __host__ __device__ static inline void _sub_matrix_real(half *m, cuDoubleComplex *a)
 {
-#pragma unroll
-  for (unsigned i = 0; i < 3; i++)
-#pragma unroll
-    for (unsigned j = 0; j < 3; j++) {
-      *IDX(m, i, j, 3) = __float2half((float) cuCreal(a[j + i*3]));
-    }
+  *m      = __float2half((float) cuCreal(a[0]));
+  *(m+1)  = __float2half((float) cuCreal(a[1]));
+  *(m+2)  = __float2half((float) cuCreal(a[2]));
+
+  *(m+16) = __float2half((float) cuCreal(a[3]));
+  *(m+17) = __float2half((float) cuCreal(a[4]));
+  *(m+18) = __float2half((float) cuCreal(a[5]));
+  
+  *(m+32) = __float2half((float) cuCreal(a[6]));
+  *(m+33) = __float2half((float) cuCreal(a[7]));
+  *(m+34) = __float2half((float) cuCreal(a[8]));
 }
 
 __host__ __device__ static inline void _sub_matrix_imag(half *m, cuDoubleComplex *a)
 {
-#pragma unroll
-  for (unsigned i = 0; i < 3; i++)
-#pragma unroll
-    for (unsigned j = 0; j < 3; j++) {
-      *IDX(m, i, j, 3) = __float2half((float) cuCimag(a[j + i*3]));
-    }
+  *m      = __float2half((float) cuCimag(a[0]));
+  *(m+1)  = __float2half((float) cuCimag(a[1]));
+  *(m+2)  = __float2half((float) cuCimag(a[2]));
+
+  *(m+16) = __float2half((float) cuCimag(a[3]));
+  *(m+17) = __float2half((float) cuCimag(a[4]));
+  *(m+18) = __float2half((float) cuCimag(a[5]));
+  
+  *(m+32) = __float2half((float) cuCimag(a[6]));
+  *(m+33) = __float2half((float) cuCimag(a[7]));
+  *(m+34) = __float2half((float) cuCimag(a[8]));
 }
 
 __host__ __device__ static inline void _sub_vec_real(half *v, cuDoubleComplex *a)
 {
-#pragma unroll
-  for (unsigned i = 0; i < 3; i++)
-    *IDX(v, i, 0, 3) = __float2half((float) cuCreal(a[i]));
+  *v      = __float2half((float) cuCreal(a[0]));
+  *(v+16) = __float2half((float) cuCreal(a[1]));
+  *(v+32) = __float2half((float) cuCreal(a[2]));
 }
 
 __host__ __device__ static inline void _sub_vec_imag(half *v, cuDoubleComplex *a)
 {
-#pragma unroll
-  for (unsigned i = 0; i < 3; i++)
-    *IDX(v, i, 0, 3) = __float2half((float) cuCimag(a[i]));
+  *v      = __float2half((float) cuCimag(a[0]));
+  *(v+16) = __float2half((float) cuCimag(a[1]));
+  *(v+32) = __float2half((float) cuCimag(a[2]));
 }
 
 __global__ void compose_matrix(half *t_mat, half *t_vec, cuDoubleComplex *mat, cuDoubleComplex *vec)
@@ -122,13 +97,13 @@ __global__ void compose_matrix(half *t_mat, half *t_vec, cuDoubleComplex *mat, c
   const unsigned gi = threadIdx.x + blockIdx.x * blockDim.x;
   if (gi == 0)   _sub_matrix_real(t_mat, mat);
   if (gi == 51)  _sub_matrix_imag(t_mat + 51, mat);
-  if (gi == 86)  _sub_matrix_real(t_mat + 86, mat);
-  if (gi == 137) _sub_matrix_imag(t_mat + 137, mat);
+  if (gi == 102)  _sub_matrix_real(t_mat + 102, mat);
+  if (gi == 153) _sub_matrix_imag(t_mat + 153, mat);
 
   if (gi == 0)   _sub_vec_real(t_vec, vec);
   if (gi == 51)  _sub_vec_imag(t_vec + 51, vec);
-  if (gi == 86)  _sub_vec_real(t_vec + 86, vec);
-  if (gi == 137) _sub_vec_imag(t_vec + 137, vec);
+  if (gi == 102)  _sub_vec_real(t_vec + 102, vec);
+  if (gi == 153) _sub_vec_imag(t_vec + 153, vec);
 }
 
 void complex_mma(cuDoubleComplex *mat, cuDoubleComplex *vec, const unsigned size)
@@ -148,6 +123,18 @@ void complex_mma(cuDoubleComplex *mat, cuDoubleComplex *vec, const unsigned size
 
   fill_zero<<<gridDim, blockDim>>>(t_mat, t_vec, t_res);
   compose_matrix<<<1, mat_size>>>(t_mat, t_vec, mat, vec);
+
+  half *h_t_mat = (half *) malloc(sizeof(half) * mat_size);
+  cudaMemcpy(h_t_mat, t_mat, sizeof(half) *mat_size, cudaMemcpyDeviceToHost);
+  printf("Composed matrix:\n");
+  for (unsigned i = 0; i < 16; i++) {
+    for (unsigned j = 0; j < 16; j++) {
+      printf("%.1f ", __half2float(h_t_mat[j + 16*i]));
+    }
+    printf("\n");
+  }
+      
+
   dot_wmma16x16<<<1, WARP_SIZE>>>(t_mat, t_vec, t_res);
 
   float *p_res = (float *) malloc(sizeof(float) * mat_size);
@@ -184,7 +171,7 @@ int main(int argc, char **argv)
 
   half *a_h;
   half *b_h;
-  half *c_h;
+  float *c_h;
 
   //posix_memalign((void **)&a_h, 128, mat_size * sizeof(half));
   //posix_memalign((void **)&b_h, 128, mat_size * sizeof(half));
@@ -192,7 +179,7 @@ int main(int argc, char **argv)
 
   a_h = (half *) malloc(sizeof(half) * mat_size);
   b_h = (half *) malloc(sizeof(half) * mat_size);
-  c_h = (half *) malloc(sizeof(half) * mat_size);
+  c_h = (float *) malloc(sizeof(float) * mat_size);
 
   for (unsigned i = 0; i < mat_size; i++) {
     a_h[i] = __float2half((float) i);
@@ -205,31 +192,62 @@ int main(int argc, char **argv)
   }
   printf("\n\n");
   for (unsigned i = 0; i < mat_size; i++) {
-    c_h[i] = __float2half((float) 0.0f);
-    printf("%f ", __half2float(c_h[i]));
+    c_h[i] =  0.0f;
+    printf("%f ", c_h[i]);
   }
   printf("\n\n");
 
   half *a_d;
   half *b_d;
-  half *c_d;
+  float *c_d;
 
   cudaMalloc((void **)&a_d, sizeof(half) * mat_size);
   cudaMalloc((void **)&b_d, sizeof(half) * mat_size);
-  cudaMalloc((void **)&c_d, sizeof(half) * mat_size);
+  cudaMalloc((void **)&c_d, sizeof(float) * mat_size);
 
   cudaMemcpy(a_d, a_h, sizeof(half) * mat_size, cudaMemcpyHostToDevice);
   cudaMemcpy(b_d, b_h, sizeof(half) * mat_size, cudaMemcpyHostToDevice);
-  cudaMemcpy(c_d, c_h, sizeof(half) * mat_size, cudaMemcpyHostToDevice);
+  cudaMemcpy(c_d, c_h, sizeof(float) * mat_size, cudaMemcpyHostToDevice);
 
-  dot_wmma4x4<<<1, 32>>>(a_d, b_d, c_d);
+  dot_wmma16x16<<<1, 32>>>(a_d, b_d, c_d);
 
-  cudaMemcpy(c_h, c_d, sizeof(half) * mat_size, cudaMemcpyDeviceToHost);
+  cudaMemcpy(c_h, c_d, sizeof(float) * mat_size, cudaMemcpyDeviceToHost);
 
   printf("\n\n");
   for (unsigned i = 0; i < mat_size; i++) {
     printf("%f ", __half2float(c_h[i]));
   }
+
+  printf("\n\nLets cmon\n\n");
+
+  cuDoubleComplex *mat = (cuDoubleComplex *) malloc(sizeof(cuDoubleComplex) * 9);
+  cuDoubleComplex *vec = (cuDoubleComplex *) malloc(sizeof(cuDoubleComplex) * 3);
+
+  for (unsigned i = 0; i < 9; i++)
+    mat[i] = make_cuDoubleComplex((double) 1, (double) 1);
+
+  for (unsigned i = 0; i < 3; i++)
+    vec[i] = make_cuDoubleComplex((double) 1, (double) 1);
+
+  cuDoubleComplex *d_mat, *d_vec;
+  cudaMalloc((void **)&d_mat, sizeof(cuDoubleComplex) * 9);
+  cudaMalloc((void **)&d_vec, sizeof(cuDoubleComplex) * 3);
+  cudaMemcpy(d_mat, mat, sizeof(mat[0]) * 9, cudaMemcpyHostToDevice);
+  cudaMemcpy(d_vec, vec, sizeof(vec[0]) * 3, cudaMemcpyHostToDevice);
+
+  printf("compute...\n\n");
+
+  complex_mma(d_mat, d_vec, 3);
+
+  free(c_h);
+  free(mat);
+  free(vec);
+
+  cudaFree(a_d);
+  cudaFree(b_d);
+  cudaFree(c_d);
+  cudaFree(d_mat);
+  cudaFree(d_vec);
 
   return EXIT_SUCCESS;
 }
