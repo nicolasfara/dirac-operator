@@ -20,7 +20,7 @@ void kernel_fill_matrix( half *__cuda_0,size_t __cuda_1)
 
 }
 # 1 "main.cudafe1.stub.c"
-static void __nv_cudaEntityRegisterCallback( void **__T2) {  __nv_dummy_param_ref(__T2); __nv_save_fatbinhandle_for_managed_rt(__T2); __cudaRegisterEntry(__T2, ((void ( *)(half *, size_t))kernel_fill_matrix), _Z18kernel_fill_matrixP6__halfm, (-1)); }
+static void __nv_cudaEntityRegisterCallback( void **__T5) {  __nv_dummy_param_ref(__T5); __nv_save_fatbinhandle_for_managed_rt(__T5); __cudaRegisterEntry(__T5, ((void ( *)(half *, size_t))kernel_fill_matrix), _Z18kernel_fill_matrixP6__halfm, (-1)); }
 static void __sti____cudaRegisterAll(void) {  __cudaRegisterBinary(__nv_cudaEntityRegisterCallback);  }
 
 #pragma GCC diagnostic pop

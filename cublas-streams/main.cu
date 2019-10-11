@@ -1,3 +1,4 @@
+
 #include <iostream>
 #include <stdlib.h>
 #include <cuda_runtime.h>
@@ -20,38 +21,62 @@ int main(int argc, char **argv)
     return EXIT_FAILURE;
   }
 
-  printf("Processing input args: %d side, %d batch", mat_side, batch);
+  printf("Processing input args: %d side, %d batch\n\n", mat_side, batch);
 
   cublasHandle_t handle;
+  cudaEvent_t start, stop;
+  cudaEventCreate(&start);
+  cudaEventCreate(&stop);
+
 
   checkCublas(cublasCreate(&handle));
   checkCublas(cublasSetMathMode(handle, CUBLAS_TENSOR_OP_MATH));
 
-  half **dA_mat;
-  half **dB_mat;
-  half **dC_mat;
+  cudaStream_t *streamArray = (cudaStream_t *)malloc(batch * sizeof(cudaStream_t *));
+  for (int i = 0; i < batch ; i++)
+      checkCudaErrors(cudaStreamCreate(&streamArray[i]));
 
-  allocate_matrix((void **)&dA_mat, sizeof(half *) * batch);
-  allocate_matrix((void **)&dB_mat, sizeof(half *) * batch);
-  allocate_matrix((void **)&dC_mat, sizeof(half *) * batch);
+  half **devPtrA = (half **)malloc(batch * sizeof(*devPtrA));
+  half **devPtrB = (half **)malloc(batch * sizeof(*devPtrB));
+  half **devPtrC = (half **)malloc(batch * sizeof(*devPtrC));
+  half **devPtrA_dev, **devPtrB_dev, **devPtrC_dev;
 
-  for (unsigned i = 0; i < batch; i++){
-    allocate_matrix((void **)&dA_mat[i], sizeof(half)*mat_side*mat_side);
-    allocate_matrix((void **)&dB_mat[i], sizeof(half)*mat_side*mat_side);
-    allocate_matrix((void **)&dC_mat[i], sizeof(half)*mat_side*mat_side);
+  for (int i = 0; i < batch ; i++)
+  {
+    allocate_matrix((void **)&devPtrA[i], mat_side * mat_side * sizeof(devPtrA[0][0]));
+    allocate_matrix((void **)&devPtrB[i], mat_side * mat_side * sizeof(devPtrB[0][0]));
+    allocate_matrix((void **)&devPtrC[i], mat_side * mat_side * sizeof(devPtrC[0][0]));
   }
 
-  for (unsigned i = 0; i < batch; i++) {
-    fill_matrix(dA_mat[i], mat_side*mat_side);
-    fill_matrix(dB_mat[i], mat_side*mat_side);
-    fill_matrix(dC_mat[i], mat_side*mat_side);
-  }
-
-  display_matrix(dC_mat[0], mat_side, mat_side);
-  mma_batched(handle, mat_side, mat_side, mat_side, dA_mat, dB_mat, dC_mat, batch);  
-  display_matrix(dC_mat[0], mat_side, mat_side);
+  cudaMalloc((void **)&devPtrA_dev, batch * sizeof(*devPtrA));
+  cudaMalloc((void **)&devPtrB_dev, batch * sizeof(*devPtrB));
+  cudaMalloc((void **)&devPtrC_dev, batch * sizeof(*devPtrC));
+  cudaMemcpy(devPtrA_dev, devPtrA, batch * sizeof(*devPtrA), cudaMemcpyHostToDevice);
+  cudaMemcpy(devPtrB_dev, devPtrB, batch * sizeof(*devPtrB), cudaMemcpyHostToDevice);
+  cudaMemcpy(devPtrC_dev, devPtrC, batch * sizeof(*devPtrC), cudaMemcpyHostToDevice);
 
 
+  checkCudaErrors(cudaEventRecord(start, 0));
+
+  mma_batched(handle, streamArray, mat_side, mat_side, mat_side, devPtrA_dev, devPtrB_dev, devPtrC_dev, batch);
+
+  checkCudaErrors(cudaEventRecord(stop, 0));
+  checkCudaErrors(cudaEventSynchronize(stop));
+  float elapsed;
+  checkCudaErrors(cudaEventElapsedTime(&elapsed, start, stop));
+  elapsed /= 1000.0f;
+  printf("Elapsed WITHOUT TCU:\t %fs\n", elapsed);
+
+
+  checkCudaErrors(cudaEventRecord(start, 0));
+
+  mma_batched_tcu(handle, streamArray, mat_side, mat_side, mat_side, (void **)devPtrA_dev, (void **)devPtrB_dev, (void **)devPtrC_dev, batch);
+
+  checkCudaErrors(cudaEventRecord(stop, 0));
+  checkCudaErrors(cudaEventSynchronize(stop));
+  checkCudaErrors(cudaEventElapsedTime(&elapsed, start, stop));
+  elapsed /= 1000.0f;
+  printf("Elapsed WITH TCU:\t %fs\n", elapsed);
 
   return EXIT_SUCCESS;
 }
