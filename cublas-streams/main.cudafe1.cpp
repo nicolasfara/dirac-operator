@@ -48518,7 +48518,7 @@ return result;
 # 38
 } 
 # 41
-void mma_batched(cublasHandle_t handle, int m, int n, int k, void *Aarrya[], void *Barray[], void *Carray[], int batchCount) 
+void mma_batched(cublasHandle_t handle, int m, int n, int k, const void *const *Aarrya, const void *const *const Barray, void *const *const Carray, int batchCount) 
 # 42
 { 
 # 43
@@ -66716,7 +66716,7 @@ if (i < mat_size) {
 } 
 #endif
 # 42 "cuda_utility.h"
-void fill_matrix(half *d_ptr, ::size_t mat_size) 
+void fill_matrix(void *d_ptr, ::size_t mat_size) 
 # 43
 { 
 # 44
@@ -66724,13 +66724,13 @@ dim3 grid(((mat_size + (1024)) - (1)) / (1024));
 # 45
 dim3 block(1024); 
 # 46
-(__cudaPushCallConfiguration(grid, block)) ? (void)0 : kernel_fill_matrix(d_ptr, mat_size); 
+(__cudaPushCallConfiguration(grid, block)) ? (void)0 : kernel_fill_matrix((half *)d_ptr, mat_size); 
 # 47
 check(cudaGetLastError(), "cudaGetLastError()", "cuda_utility.h", 47); 
 # 48
 } 
 # 50
-void display_matrix(half *d_ptr, ::size_t m, ::size_t n) 
+void display_matrix(void *d_ptr, ::size_t m, ::size_t n) 
 # 51
 { 
 # 52
@@ -66786,11 +66786,11 @@ checkCublas(cublasCreate_v2(&handle));
 # 28
 checkCublas(cublasSetMathMode(handle, CUBLAS_TENSOR_OP_MATH)); 
 # 30
-half *dA_mat[batch];   
+void *dA_mat[batch];   
 # 31
-half *dB_mat[batch];   
+void *dB_mat[batch];   
 # 32
-half *dC_mat[batch];   
+void *dC_mat[batch];   
 # 34
 for (unsigned i = (0); i < batch; i++) { 
 # 35
@@ -66812,12 +66812,16 @@ fill_matrix(dC_mat[i], mat_side * mat_side);
 # 44
 }  
 # 46
-mma_batched(handle, mat_side, mat_side, mat_side, (void **)(dA_mat), (void **)(dB_mat), (void **)(dC_mat), batch); 
+printf("\n %p", dA_mat[0]); 
 # 48
-display_matrix(dA_mat[0], mat_side, mat_side); 
-# 50
+display_matrix(dC_mat[0], mat_side, mat_side); 
+# 49
+mma_batched(handle, mat_side, mat_side, mat_side, dA_mat, dB_mat, dC_mat, batch); 
+# 51
+printf("\n %p", dA_mat[0]); 
+# 54
 return 0; 
-# 51 "main.cu"
+# 55 "main.cu"
 } 
 
 # 1 "main.cudafe1.stub.c"

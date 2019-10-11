@@ -38,7 +38,7 @@ inline cublasStatus_t checkCublas(cublasStatus_t result)
 }
 
 
-void mma_batched(cublasHandle_t handle, int m, int n, int k, void * const Aarrya[], void * const Barray[], void * const Carray[], int batchCount)
+void mma_batched(cublasHandle_t handle, int m, int n, int k, const void * const * Aarrya, const void * const * const Barray, void * const * const Carray, int batchCount)
 {
   cublasStatus_t stat;
   half alpha = __float2half(1.0f);

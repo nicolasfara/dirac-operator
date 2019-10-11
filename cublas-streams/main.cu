@@ -27,9 +27,9 @@ int main(int argc, char **argv)
   checkCublas(cublasCreate(&handle));
   checkCublas(cublasSetMathMode(handle, CUBLAS_TENSOR_OP_MATH));
 
-  half *dA_mat[batch];
-  half *dB_mat[batch];
-  half *dC_mat[batch];
+  void *dA_mat[batch];
+  void *dB_mat[batch];
+  void *dC_mat[batch];
 
   for (unsigned i = 0; i < batch; i++){
     allocate_matrix((void **)&dA_mat[i], sizeof(half)*mat_side*mat_side);
@@ -43,9 +43,13 @@ int main(int argc, char **argv)
     fill_matrix(dC_mat[i], mat_side*mat_side);
   }
 
+  printf("\n %p", dA_mat[0]);
+
+  display_matrix(dC_mat[0], mat_side, mat_side);
   mma_batched(handle, mat_side, mat_side, mat_side, dA_mat, dB_mat, dC_mat, batch);
 
-  display_matrix(dA_mat[0], mat_side, mat_side);
+  printf("\n %p", dA_mat[0]);
+
 
   return EXIT_SUCCESS;
 }
