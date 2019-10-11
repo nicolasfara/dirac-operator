@@ -48518,7 +48518,7 @@ return result;
 # 38
 } 
 # 41
-void mma_batched(cublasHandle_t handle, int m, int n, int k, const void *const *Aarrya, const void *const *const Barray, void *const *const Carray, int batchCount) 
+void mma_batched_tcu(cublasHandle_t handle, int m, int n, int k, const void *const *Aarrya, const void *const *const Barray, void *const *const Carray, int batchCount) 
 # 42
 { 
 # 43
@@ -48532,6 +48532,22 @@ stat = cublasGemmBatchedEx(handle, CUBLAS_OP_N, CUBLAS_OP_T, m, n, k, &alpha, Aa
 # 51
 checkCublas(stat); 
 # 52
+} 
+# 54
+void mma_batched(cublasHandle_t handle, int m, int n, int k, const half *const *Aarray, const half *const *const Barray, half *const *const Carray, int batchCount) 
+# 55
+{ 
+# 56
+cublasStatus_t stat; 
+# 57
+half alpha = __float2half((1.0F)); 
+# 58
+half beta = __float2half((0.0F)); 
+# 59
+stat = cublasHgemmBatched(handle, CUBLAS_OP_N, CUBLAS_OP_T, m, n, k, &alpha, Aarray, k, Barray, n, &beta, Carray, n, batchCount); 
+# 69
+checkCublas(stat); 
+# 70
 } 
 # 64 "/usr/include/assert.h" 3
 extern "C" {
@@ -66786,11 +66802,11 @@ checkCublas(cublasCreate_v2(&handle));
 # 28
 checkCublas(cublasSetMathMode(handle, CUBLAS_TENSOR_OP_MATH)); 
 # 30
-void *dA_mat[batch];   
+half *dA_mat[batch];   
 # 31
-void *dB_mat[batch];   
+half *dB_mat[batch];   
 # 32
-void *dC_mat[batch];   
+half *dC_mat[batch];   
 # 34
 for (unsigned i = (0); i < batch; i++) { 
 # 35
@@ -66814,14 +66830,16 @@ fill_matrix(dC_mat[i], mat_side * mat_side);
 # 46
 printf("\n %p", dA_mat[0]); 
 # 48
-display_matrix(dC_mat[0], mat_side, mat_side); 
+display_matrix(dA_mat[0], mat_side, mat_side); 
 # 49
 mma_batched(handle, mat_side, mat_side, mat_side, dA_mat, dB_mat, dC_mat, batch); 
-# 51
+# 50
+display_matrix(dA_mat[0], mat_side, mat_side); 
+# 52
 printf("\n %p", dA_mat[0]); 
-# 54
+# 55
 return 0; 
-# 55 "main.cu"
+# 56 "main.cu"
 } 
 
 # 1 "main.cudafe1.stub.c"
