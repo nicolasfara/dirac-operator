@@ -78,5 +78,34 @@ int main(int argc, char **argv)
   elapsed /= 1000.0f;
   printf("Elapsed WITH TCU:\t %fs\n", elapsed);
 
+  /*************** COMPLEX SECTION **************************/
+
+  cuDoubleComplex *mat = (cuDoubleComplex *) malloc(sizeof(cuDoubleComplex) * 9);
+  cuDoubleComplex *vec = (cuDoubleComplex *) malloc(sizeof(cuDoubleComplex) * 3);
+  cuDoubleComplex *res = (cuDoubleComplex *) malloc(sizeof(cuDoubleComplex) * 3);
+
+  for (unsigned i = 0; i < 9; i++)
+    mat[i] = make_cuDoubleComplex((double) 1, (double) 1);
+
+  for (unsigned i = 0; i < 3; i++)
+    vec[i] = make_cuDoubleComplex((double) 1, (double) 1);
+
+  cuDoubleComplex *d_mat, *d_vec, *d_res;
+  cudaMalloc((void **)&d_mat, sizeof(cuDoubleComplex) * 9);
+  cudaMalloc((void **)&d_vec, sizeof(cuDoubleComplex) * 3);
+  cudaMalloc((void **)&d_res, sizeof(cuDoubleComplex) * 3);
+  cudaMemcpy(d_mat, mat, sizeof(mat[0]) * 9, cudaMemcpyHostToDevice);
+  cudaMemcpy(d_vec, vec, sizeof(vec[0]) * 3, cudaMemcpyHostToDevice);
+
+  checkCudaErrors(cudaEventRecord(start, 0));
+
+  test_3x3matvec(d_mat, d_vec, d_res, batch);
+
+  checkCudaErrors(cudaEventRecord(stop, 0));
+  checkCudaErrors(cudaEventSynchronize(stop));
+  checkCudaErrors(cudaEventElapsedTime(&elapsed, start, stop));
+  elapsed /= 1000.0f;
+  printf("Elapsed WITH TCU:\t %fs\n", elapsed);
+
   return EXIT_SUCCESS;
 }
