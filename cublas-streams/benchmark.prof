@@ -1,0 +1,14 @@
+------------- 8 side 16 batch ---------------
+Without TCU:	99   uS
+With TCU:	34.3 uS
+Complex:	39   uS
+
+------------- 8 side 32 batch ---------------
+Without TCU:	84.6 uS
+With TCU:	30.3 uS
+Complex:	46.3 uS
+
+------------- 8 side 64 batch ---------------
+Without TCU:	86.3 uS
+With TCU:	31   uS
+Complex:	73.6 uS

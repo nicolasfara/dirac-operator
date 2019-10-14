@@ -72,6 +72,9 @@ int main(int argc, char **argv)
 
   mma_batched_tcu(handle, streamArray, mat_side, mat_side, mat_side, (void **)devPtrA_dev, (void **)devPtrB_dev, (void **)devPtrC_dev, batch);
 
+  //half *h_res = (half *) malloc(sizeof(half)*mat_side*mat_side);
+  //checkCublas(cublasGetMatrix(mat_side, mat_side, mat_side*mat_side, devPtrC_dev[0], mat_side, h_res, mat_side));  
+
   checkCudaErrors(cudaEventRecord(stop, 0));
   checkCudaErrors(cudaEventSynchronize(stop));
   checkCudaErrors(cudaEventElapsedTime(&elapsed, start, stop));
@@ -99,13 +102,13 @@ int main(int argc, char **argv)
 
   checkCudaErrors(cudaEventRecord(start, 0));
 
-  test_3x3matvec(d_mat, d_vec, d_res, batch);
+  test_3x3matvec(d_mat, d_vec, d_res, batch/5);
 
   checkCudaErrors(cudaEventRecord(stop, 0));
   checkCudaErrors(cudaEventSynchronize(stop));
   checkCudaErrors(cudaEventElapsedTime(&elapsed, start, stop));
   elapsed /= 1000.0f;
-  printf("Elapsed WITH TCU:\t %fs\n", elapsed);
+  printf("Elapsed complex:\t %fs\n", elapsed);
 
   return EXIT_SUCCESS;
 }

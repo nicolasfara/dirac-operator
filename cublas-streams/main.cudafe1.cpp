@@ -37665,6 +37665,56 @@ stat = cublasHgemmBatched(handle, CUBLAS_OP_N, CUBLAS_OP_T, m, n, k, &alpha, Aar
 checkCublas(stat); 
 # 72
 } 
+# 74
+void mat_vec_mul(cuDoubleComplex *matrix, cuDoubleComplex *in_vect, cuDoubleComplex *out_vect) ;
+#if 0
+# 75
+{ 
+# 76
+cuDoubleComplex vec0 = in_vect[0]; 
+# 77
+cuDoubleComplex vec1 = in_vect[1]; 
+# 78
+cuDoubleComplex vec2 = in_vect[2]; 
+# 80
+cuDoubleComplex mat00 = matrix[0]; 
+# 81
+cuDoubleComplex mat01 = matrix[1]; 
+# 82
+cuDoubleComplex mat02 = matrix[2]; 
+# 84
+cuDoubleComplex mat10 = matrix[3]; 
+# 85
+cuDoubleComplex mat11 = matrix[4]; 
+# 86
+cuDoubleComplex mat12 = matrix[5]; 
+# 88
+cuDoubleComplex mat20 = matrix[6]; 
+# 89
+cuDoubleComplex mat21 = matrix[7]; 
+# 90
+cuDoubleComplex mat22 = matrix[8]; 
+# 92
+(out_vect[0]) = cuCadd(cuCadd(cuCmul(mat00, vec0), cuCmul(mat01, vec1)), cuCmul(mat02, vec2)); 
+# 96
+(out_vect[1]) = cuCadd(cuCadd(cuCmul(mat10, vec0), cuCmul(mat11, vec1)), cuCmul(mat12, vec2)); 
+# 100
+(out_vect[2]) = cuCadd(cuCadd(cuCmul(mat20, vec0), cuCmul(mat21, vec1)), cuCmul(mat22, vec2)); 
+# 103
+} 
+#endif
+# 105 "cublas-utility.h"
+void test_3x3matvec(cuDoubleComplex *matrix, cuDoubleComplex *in_vec, cuDoubleComplex *out_vec, int batch) 
+# 106
+{ 
+# 107
+for (unsigned i = (0); i < batch; i++) { 
+# 108
+(__cudaPushCallConfiguration(1, 1)) ? (void)0 : mat_vec_mul(matrix, in_vec, out_vec); 
+# 109
+}  
+# 110
+} 
 # 65 "/usr/include/assert.h" 3
 extern "C" {
 # 68
@@ -52681,19 +52731,59 @@ printf("Elapsed WITHOUT TCU:\t %fs\n", elapsed);
 check(cudaEventRecord(start, 0), "cudaEventRecord(start, 0)", "main.cu", 71); 
 # 73
 mma_batched_tcu(handle, streamArray, mat_side, mat_side, mat_side, (void **)devPtrA_dev, (void **)devPtrB_dev, (void **)devPtrC_dev, batch); 
-# 75
-check(cudaEventRecord(stop, 0), "cudaEventRecord(stop, 0)", "main.cu", 75); 
-# 76
-check(cudaEventSynchronize(stop), "cudaEventSynchronize(stop)", "main.cu", 76); 
-# 77
-check(cudaEventElapsedTime(&elapsed, start, stop), "cudaEventElapsedTime(&elapsed, start, stop)", "main.cu", 77); 
 # 78
-elapsed /= (1000.0F); 
+check(cudaEventRecord(stop, 0), "cudaEventRecord(stop, 0)", "main.cu", 78); 
 # 79
-printf("Elapsed WITH TCU:\t %fs\n", elapsed); 
+check(cudaEventSynchronize(stop), "cudaEventSynchronize(stop)", "main.cu", 79); 
+# 80
+check(cudaEventElapsedTime(&elapsed, start, stop), "cudaEventElapsedTime(&elapsed, start, stop)", "main.cu", 80); 
 # 81
-return 0; 
+elapsed /= (1000.0F); 
 # 82
+printf("Elapsed WITH TCU:\t %fs\n", elapsed); 
+# 86
+cuDoubleComplex *mat = (cuDoubleComplex *)malloc(sizeof(cuDoubleComplex) * (9)); 
+# 87
+cuDoubleComplex *vec = (cuDoubleComplex *)malloc(sizeof(cuDoubleComplex) * (3)); 
+# 88
+cuDoubleComplex *res = (cuDoubleComplex *)malloc(sizeof(cuDoubleComplex) * (3)); 
+# 90
+for (unsigned i = (0); i < (9); i++) { 
+# 91
+(mat[i]) = make_cuDoubleComplex((double)1, (double)1); }  
+# 93
+for (unsigned i = (0); i < (3); i++) { 
+# 94
+(vec[i]) = make_cuDoubleComplex((double)1, (double)1); }  
+# 96
+cuDoubleComplex *d_mat, *d_vec, *d_res; 
+# 97
+cudaMalloc((void **)(&d_mat), sizeof(cuDoubleComplex) * (9)); 
+# 98
+cudaMalloc((void **)(&d_vec), sizeof(cuDoubleComplex) * (3)); 
+# 99
+cudaMalloc((void **)(&d_res), sizeof(cuDoubleComplex) * (3)); 
+# 100
+cudaMemcpy(d_mat, mat, sizeof (mat[0]) * (9), cudaMemcpyHostToDevice); 
+# 101
+cudaMemcpy(d_vec, vec, sizeof (vec[0]) * (3), cudaMemcpyHostToDevice); 
+# 103
+check(cudaEventRecord(start, 0), "cudaEventRecord(start, 0)", "main.cu", 103); 
+# 105
+test_3x3matvec(d_mat, d_vec, d_res, batch / 5); 
+# 107
+check(cudaEventRecord(stop, 0), "cudaEventRecord(stop, 0)", "main.cu", 107); 
+# 108
+check(cudaEventSynchronize(stop), "cudaEventSynchronize(stop)", "main.cu", 108); 
+# 109
+check(cudaEventElapsedTime(&elapsed, start, stop), "cudaEventElapsedTime(&elapsed, start, stop)", "main.cu", 109); 
+# 110
+elapsed /= (1000.0F); 
+# 111
+printf("Elapsed complex:\t %fs\n", elapsed); 
+# 113
+return 0; 
+# 114
 } 
 
 # 1 "main.cudafe1.stub.c"
