@@ -102,7 +102,7 @@ __global__ void mat_vec_mul(cuDoubleComplex *matrix, cuDoubleComplex *in_vect, c
                                  cuCmul( mat22, vec2 ));
 }
 
-void test-3x3matvec(cuDoubleComplex *matrix, cuDoubleComplex *in_vec, cuDoubleComplex *out_vec, int batch)
+void test_3x3matvec(cuDoubleComplex *matrix, cuDoubleComplex *in_vec, cuDoubleComplex *out_vec, int batch)
 {
   for (unsigned i = 0; i < batch; i++) {
     mat_vec_mul<<<1, 1>>>(matrix, in_vec, out_vec);
