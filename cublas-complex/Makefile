@@ -35,6 +35,5 @@ quadro: common-cuda.h
 
 # CLEAN
 
-clean: 
-	rm -rf *.o 
-
+clean:
+	rm -f *.o *dlink* *.ii *.cubin *.gpu *.ptx *cudafe* *.fatbin* *.module_id test-complex-cublas

@@ -23,7 +23,7 @@ void inline checkError(cublasStatus_t status, const char *msg)
   }
 }
 
-__global__ void fillMatrix(__restrict cuFloatComplex * const mat, const unsigned size)
+__global__ void fillMatrix(cuFloatComplex * const mat, const unsigned size)
 {
   const unsigned i = threadIdx.x + blockIdx.x * blockDim.x;
 
@@ -32,7 +32,7 @@ __global__ void fillMatrix(__restrict cuFloatComplex * const mat, const unsigned
   }
 }
 
-__global__ void checkMatrix(const __restrict cuFloatComplex * const m1, const __restrict cuFloatComplex * const m2, const unsigned size, bool *isValid)
+__global__ void checkMatrix(const cuFloatComplex * const m1, const cuFloatComplex * const m2, const unsigned size, bool *isValid)
 {
 
   const unsigned i = threadIdx.x + blockIdx.x * blockDim.x;
