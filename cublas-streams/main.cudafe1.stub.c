@@ -20,16 +20,16 @@ void mat_vec_mul( cuDoubleComplex *__cuda_0,cuDoubleComplex *__cuda_1,cuDoubleCo
 }
 # 1 "main.cudafe1.stub.c"
 void __device_stub__Z18kernel_fill_matrixP6__halfm( half *__par0,  size_t __par1) {  __cudaLaunchPrologue(2); __cudaSetupArgSimple(__par0, 0UL); __cudaSetupArgSimple(__par1, 8UL); __cudaLaunch(((char *)((void ( *)(half *, size_t))kernel_fill_matrix))); }
-# 35 "cuda_utility.h"
+# 37 "cuda_utility.h"
 void kernel_fill_matrix( half *__cuda_0,size_t __cuda_1)
-# 36 "cuda_utility.h"
+# 38 "cuda_utility.h"
 {__device_stub__Z18kernel_fill_matrixP6__halfm( __cuda_0,__cuda_1);
 
 
 
 }
 # 1 "main.cudafe1.stub.c"
-static void __nv_cudaEntityRegisterCallback( void **__T182) {  __nv_dummy_param_ref(__T182); __nv_save_fatbinhandle_for_managed_rt(__T182); __cudaRegisterEntry(__T182, ((void ( *)(half *, size_t))kernel_fill_matrix), _Z18kernel_fill_matrixP6__halfm, (-1)); __cudaRegisterEntry(__T182, ((void ( *)(cuDoubleComplex *, cuDoubleComplex *, cuDoubleComplex *))mat_vec_mul), _Z11mat_vec_mulP7double2S0_S0_, (-1)); }
+static void __nv_cudaEntityRegisterCallback( void **__T185) {  __nv_dummy_param_ref(__T185); __nv_save_fatbinhandle_for_managed_rt(__T185); __cudaRegisterEntry(__T185, ((void ( *)(half *, size_t))kernel_fill_matrix), _Z18kernel_fill_matrixP6__halfm, (-1)); __cudaRegisterEntry(__T185, ((void ( *)(cuDoubleComplex *, cuDoubleComplex *, cuDoubleComplex *))mat_vec_mul), _Z11mat_vec_mulP7double2S0_S0_, (-1)); }
 static void __sti____cudaRegisterAll(void) {  __cudaRegisterBinary(__nv_cudaEntityRegisterCallback);  }
 
 #pragma GCC diagnostic pop

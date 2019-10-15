@@ -38,13 +38,13 @@ inline cublasStatus_t checkCublas(cublasStatus_t result)
 }
 
 
-void mma_batched_tcu(cublasHandle_t handle, cudaStream_t *stream, int m, int n, int k, const void * const * Aarrya, const void * const * const Barray, void * const * const Carray, int batchCount)
+void mma_batched_tcu(cublasHandle_t handle, int m, int n, int k, const void * const * Aarrya, const void * const * const Barray, void * const * const Carray, int batchCount)
 {
   cublasStatus_t stat;
   //cublasSetStream(handle, stream);
   half alpha = __float2half(1.0f);
   half beta = __float2half(0.0f);
-  stat = cublasGemmBatchedEx(handle, CUBLAS_OP_N, CUBLAS_OP_T, m, n, k, &alpha,
+  stat = cublasGemmBatchedEx(handle, CUBLAS_OP_N, CUBLAS_OP_N, m, n, k, &alpha,
       Aarrya, CUDA_R_16F, k,
       Barray, CUDA_R_16F, n, &beta,
       Carray, CUDA_R_16F, n, batchCount, CUDA_R_16F, CUBLAS_GEMM_DEFAULT_TENSOR_OP);
@@ -52,15 +52,15 @@ void mma_batched_tcu(cublasHandle_t handle, cudaStream_t *stream, int m, int n, 
   checkCublas(stat);
 }
 
-void mma_batched(cublasHandle_t handle, cudaStream_t *stream, int m, int n, int k, const half * const * Aarray, const half * const * const Barray, half * const * const Carray, int batchCount)
+void mma_batched(cublasHandle_t handle, int m, int n, int k, const half * const * Aarray, const half * const * const Barray, half * const * const Carray, int batchCount)
 {
   cublasStatus_t stat;
-  cublasSetStream(handle, stream[0]);
+  //cublasSetStream(handle, stream[0]);
   half alpha = __float2half(1.0f);
   half beta = __float2half(0.0f);
   stat = cublasHgemmBatched(handle,
                                   CUBLAS_OP_N,
-                                  CUBLAS_OP_T,
+                                  CUBLAS_OP_N,
                                   m, n, k,
                                   &alpha,
                                   Aarray, k,
