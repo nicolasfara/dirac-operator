@@ -8,15 +8,15 @@ CC_CFLAGS-GTX=-O3 --ptxas-options=-v -lineinfo -gencode arch=compute_61,code=sm_
 CC_CFLAGS-QUADRO=-O3 --ptxas-options=-v -lineinfo -gencode arch=compute_50,code=sm_50 -keep -lcublas
 INCLUDE=-I./common/inc
 
-all: cuda
+all: volta
 
-cuda-volta:
+volta:
 	nvcc $(CC_CFLAGS) $(INCLUDE) main.cu -o cublas-streams
 
-cuda-gtx:
+gtx:
 	nvcc $(CC_CFLAGS-GTX) $(INCLUDE) main.cu -o cublas-streams
 
-cuda-quadro:
+quadro:
 	nvcc $(CC_CFLAGS-QUADRO) $(INCLUDE) main.cu -o cublas-streams
 
 $(EXE) : $(OBJS) $(CU_OBJS)
