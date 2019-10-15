@@ -34,9 +34,9 @@ int main(int argc, char **argv)
   checkCublas(cublasCreate(&handle));
   checkCublas(cublasSetMathMode(handle, CUBLAS_TENSOR_OP_MATH));
 
-  half **devPtrA = (half **)malloc(batch_complex * sizeof(*devPtrA));
-  half **devPtrB = (half **)malloc(batch_complex * sizeof(*devPtrB));
-  half **devPtrC = (half **)malloc(batch_complex * sizeof(*devPtrC));
+  half **devPtrA = (half **)malloc(batch * sizeof(*devPtrA));
+  half **devPtrB = (half **)malloc(batch * sizeof(*devPtrB));
+  half **devPtrC = (half **)malloc(batch * sizeof(*devPtrC));
   half **devPtrA_dev, **devPtrB_dev, **devPtrC_dev;
 
   for (int i = 0; i < batch ; i++) {
@@ -45,12 +45,12 @@ int main(int argc, char **argv)
     allocate_matrix((void **)&devPtrC[i], mat_side * mat_side * sizeof(devPtrC[0][0]));
   }
 
-  checkCudaErrors(cudaMalloc((void **)&devPtrA_dev, batch_complex * sizeof(*devPtrA)));
-  checkCudaErrors(cudaMalloc((void **)&devPtrB_dev, batch_complex * sizeof(*devPtrB)));
-  checkCudaErrors(cudaMalloc((void **)&devPtrC_dev, batch_complex * sizeof(*devPtrC)));
-  checkCudaErrors(cudaMemcpy(devPtrA_dev, devPtrA, batch_complex * sizeof(*devPtrA), cudaMemcpyHostToDevice));
-  checkCudaErrors(cudaMemcpy(devPtrB_dev, devPtrB, batch_complex * sizeof(*devPtrB), cudaMemcpyHostToDevice));
-  checkCudaErrors(cudaMemcpy(devPtrC_dev, devPtrC, batch_complex * sizeof(*devPtrC), cudaMemcpyHostToDevice));
+  checkCudaErrors(cudaMalloc((void **)&devPtrA_dev, batch * sizeof(*devPtrA)));
+  checkCudaErrors(cudaMalloc((void **)&devPtrB_dev, batch * sizeof(*devPtrB)));
+  checkCudaErrors(cudaMalloc((void **)&devPtrC_dev, batch * sizeof(*devPtrC)));
+  checkCudaErrors(cudaMemcpy(devPtrA_dev, devPtrA, batch * sizeof(*devPtrA), cudaMemcpyHostToDevice));
+  checkCudaErrors(cudaMemcpy(devPtrB_dev, devPtrB, batch * sizeof(*devPtrB), cudaMemcpyHostToDevice));
+  checkCudaErrors(cudaMemcpy(devPtrC_dev, devPtrC, batch * sizeof(*devPtrC), cudaMemcpyHostToDevice));
 
   fill_matrix(devPtrA[0], mat_side, mat_side);
   fill_matrix(devPtrB[0], mat_side, mat_side);
@@ -65,7 +65,7 @@ int main(int argc, char **argv)
   for (unsigned i = 0; i < RUN; i++) {
     checkCudaErrors(cudaEventRecord(start, 0));
 
-    mma_batched(handle, mat_side, mat_side, mat_side, devPtrA_dev, devPtrB_dev, devPtrC_dev, batch_complex);
+    mma_batched(handle, mat_side, mat_side, mat_side, devPtrA_dev, devPtrB_dev, devPtrC_dev, batch);
     cudaDeviceSynchronize();
 
     checkCudaErrors(cudaEventRecord(stop, 0));
@@ -85,7 +85,7 @@ int main(int argc, char **argv)
   for (unsigned i = 0; i < RUN; i++) {
     checkCudaErrors(cudaEventRecord(start, 0));
 
-    mma_batched_tcu(handle, mat_side, mat_side, mat_side, (void **)devPtrA_dev, (void **)devPtrB_dev, (void **)devPtrC_dev, batch_complex);
+    mma_batched_tcu(handle, mat_side, mat_side, mat_side, (void **)devPtrA_dev, (void **)devPtrB_dev, (void **)devPtrC_dev, batch);
     cudaDeviceSynchronize();
 
     checkCudaErrors(cudaEventRecord(stop, 0));
@@ -122,7 +122,7 @@ int main(int argc, char **argv)
   for (unsigned i = 0; i < RUN; i++) {
     checkCudaErrors(cudaEventRecord(start, 0));
 
-    test_3x3matvec(d_mat, d_vec, d_res, batch);
+    test_3x3matvec(d_mat, d_vec, d_res, batch_complex);
     cudaDeviceSynchronize();
 
     checkCudaErrors(cudaEventRecord(stop, 0));
