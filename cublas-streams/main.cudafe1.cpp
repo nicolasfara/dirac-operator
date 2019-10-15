@@ -66840,140 +66840,142 @@ mat_side = atoi(argv[1]);
 # 20
 batch_complex = atoi(argv[2]); 
 # 21
-} else { 
+batch = (batch_complex * 4); 
 # 22
+} else { 
+# 23
 fprintf(stderr, "./%s SIDE BATCH", argv[0]); 
-# 23 "main.cu"
-return 1; 
 # 24 "main.cu"
+return 1; 
+# 25 "main.cu"
 }  
-# 26
-printf("Processing input args: %d side, %d batch\n\n", mat_side, batch); 
-# 28
-cublasHandle_t handle; 
+# 27
+printf("Processing input args: %d side, %d batch\n\n", mat_side, batch_complex); 
 # 29
-cudaEvent_t start, stop; 
+cublasHandle_t handle; 
 # 30
-cudaEventCreate(&start); 
+cudaEvent_t start, stop; 
 # 31
+cudaEventCreate(&start); 
+# 32
 cudaEventCreate(&stop); 
-# 33
-checkCublas(cublasCreate_v2(&handle)); 
 # 34
+checkCublas(cublasCreate_v2(&handle)); 
+# 35
 checkCublas(cublasSetMathMode(handle, CUBLAS_TENSOR_OP_MATH)); 
-# 36
-half **devPtrA = (half **)malloc(batch_complex * sizeof (*devPtrA)); 
 # 37
-half **devPtrB = (half **)malloc(batch_complex * sizeof (*devPtrB)); 
+half **devPtrA = (half **)malloc(batch_complex * sizeof (*devPtrA)); 
 # 38
-half **devPtrC = (half **)malloc(batch_complex * sizeof (*devPtrC)); 
+half **devPtrB = (half **)malloc(batch_complex * sizeof (*devPtrB)); 
 # 39
+half **devPtrC = (half **)malloc(batch_complex * sizeof (*devPtrC)); 
+# 40
 half **devPtrA_dev, **devPtrB_dev, **devPtrC_dev; 
-# 41
-for (int i = 0; i < batch; i++) { 
 # 42
-allocate_matrix((void **)(&(devPtrA[i])), (mat_side * mat_side) * sizeof ((devPtrA[0])[0])); 
+for (int i = 0; i < batch; i++) { 
 # 43
-allocate_matrix((void **)(&(devPtrB[i])), (mat_side * mat_side) * sizeof ((devPtrB[0])[0])); 
+allocate_matrix((void **)(&(devPtrA[i])), (mat_side * mat_side) * sizeof ((devPtrA[0])[0])); 
 # 44
-allocate_matrix((void **)(&(devPtrC[i])), (mat_side * mat_side) * sizeof ((devPtrC[0])[0])); 
+allocate_matrix((void **)(&(devPtrB[i])), (mat_side * mat_side) * sizeof ((devPtrB[0])[0])); 
 # 45
+allocate_matrix((void **)(&(devPtrC[i])), (mat_side * mat_side) * sizeof ((devPtrC[0])[0])); 
+# 46
 }  
-# 47
-check(cudaMalloc((void **)(&devPtrA_dev), batch_complex * sizeof (*devPtrA)), "cudaMalloc((void **)&devPtrA_dev, batch_complex * sizeof(*devPtrA))", "main.cu", 47); 
 # 48
-check(cudaMalloc((void **)(&devPtrB_dev), batch_complex * sizeof (*devPtrB)), "cudaMalloc((void **)&devPtrB_dev, batch_complex * sizeof(*devPtrB))", "main.cu", 48); 
+check(cudaMalloc((void **)(&devPtrA_dev), batch_complex * sizeof (*devPtrA)), "cudaMalloc((void **)&devPtrA_dev, batch_complex * sizeof(*devPtrA))", "main.cu", 48); 
 # 49
-check(cudaMalloc((void **)(&devPtrC_dev), batch_complex * sizeof (*devPtrC)), "cudaMalloc((void **)&devPtrC_dev, batch_complex * sizeof(*devPtrC))", "main.cu", 49); 
+check(cudaMalloc((void **)(&devPtrB_dev), batch_complex * sizeof (*devPtrB)), "cudaMalloc((void **)&devPtrB_dev, batch_complex * sizeof(*devPtrB))", "main.cu", 49); 
 # 50
-check(cudaMemcpy(devPtrA_dev, devPtrA, batch_complex * sizeof (*devPtrA), cudaMemcpyHostToDevice), "cudaMemcpy(devPtrA_dev, devPtrA, batch_complex * sizeof(*devPtrA), cudaMemcpyHostToDevice)", "main.cu", 50); 
+check(cudaMalloc((void **)(&devPtrC_dev), batch_complex * sizeof (*devPtrC)), "cudaMalloc((void **)&devPtrC_dev, batch_complex * sizeof(*devPtrC))", "main.cu", 50); 
 # 51
-check(cudaMemcpy(devPtrB_dev, devPtrB, batch_complex * sizeof (*devPtrB), cudaMemcpyHostToDevice), "cudaMemcpy(devPtrB_dev, devPtrB, batch_complex * sizeof(*devPtrB), cudaMemcpyHostToDevice)", "main.cu", 51); 
+check(cudaMemcpy(devPtrA_dev, devPtrA, batch_complex * sizeof (*devPtrA), cudaMemcpyHostToDevice), "cudaMemcpy(devPtrA_dev, devPtrA, batch_complex * sizeof(*devPtrA), cudaMemcpyHostToDevice)", "main.cu", 51); 
 # 52
-check(cudaMemcpy(devPtrC_dev, devPtrC, batch_complex * sizeof (*devPtrC), cudaMemcpyHostToDevice), "cudaMemcpy(devPtrC_dev, devPtrC, batch_complex * sizeof(*devPtrC), cudaMemcpyHostToDevice)", "main.cu", 52); 
-# 54
-fill_matrix(devPtrA[0], mat_side, mat_side); 
+check(cudaMemcpy(devPtrB_dev, devPtrB, batch_complex * sizeof (*devPtrB), cudaMemcpyHostToDevice), "cudaMemcpy(devPtrB_dev, devPtrB, batch_complex * sizeof(*devPtrB), cudaMemcpyHostToDevice)", "main.cu", 52); 
+# 53
+check(cudaMemcpy(devPtrC_dev, devPtrC, batch_complex * sizeof (*devPtrC), cudaMemcpyHostToDevice), "cudaMemcpy(devPtrC_dev, devPtrC, batch_complex * sizeof(*devPtrC), cudaMemcpyHostToDevice)", "main.cu", 53); 
 # 55
-fill_matrix(devPtrB[0], mat_side, mat_side); 
+fill_matrix(devPtrA[0], mat_side, mat_side); 
 # 56
+fill_matrix(devPtrB[0], mat_side, mat_side); 
+# 57
 fill_matrix(devPtrC[0], mat_side, mat_side); 
-# 60
-check(cudaEventRecord(start, 0), "cudaEventRecord(start, 0)", "main.cu", 60); 
-# 62
-mma_batched(handle, mat_side, mat_side, mat_side, devPtrA_dev, devPtrB_dev, devPtrC_dev, batch_complex); 
+# 61
+check(cudaEventRecord(start, 0), "cudaEventRecord(start, 0)", "main.cu", 61); 
 # 63
+mma_batched(handle, mat_side, mat_side, mat_side, devPtrA_dev, devPtrB_dev, devPtrC_dev, batch_complex); 
+# 64
 display_matrix(devPtrC[0], mat_side, mat_side); 
-# 65
-check(cudaEventRecord(stop, 0), "cudaEventRecord(stop, 0)", "main.cu", 65); 
 # 66
-check(cudaEventSynchronize(stop), "cudaEventSynchronize(stop)", "main.cu", 66); 
+check(cudaEventRecord(stop, 0), "cudaEventRecord(stop, 0)", "main.cu", 66); 
 # 67
-float elapsed; 
+check(cudaEventSynchronize(stop), "cudaEventSynchronize(stop)", "main.cu", 67); 
 # 68
-check(cudaEventElapsedTime(&elapsed, start, stop), "cudaEventElapsedTime(&elapsed, start, stop)", "main.cu", 68); 
+float elapsed; 
 # 69
-elapsed /= (1000.0F); 
+check(cudaEventElapsedTime(&elapsed, start, stop), "cudaEventElapsedTime(&elapsed, start, stop)", "main.cu", 69); 
 # 70
+elapsed /= (1000.0F); 
+# 71
 printf("Elapsed WITHOUT TCU:\t %fs\n", elapsed); 
-# 74
-check(cudaEventRecord(start, 0), "cudaEventRecord(start, 0)", "main.cu", 74); 
-# 76
-mma_batched_tcu(handle, mat_side, mat_side, mat_side, (void **)devPtrA_dev, (void **)devPtrB_dev, (void **)devPtrC_dev, batch_complex); 
+# 75
+check(cudaEventRecord(start, 0), "cudaEventRecord(start, 0)", "main.cu", 75); 
 # 77
+mma_batched_tcu(handle, mat_side, mat_side, mat_side, (void **)devPtrA_dev, (void **)devPtrB_dev, (void **)devPtrC_dev, batch_complex); 
+# 78
 display_matrix(devPtrC[0], mat_side, mat_side); 
-# 79
-check(cudaEventRecord(stop, 0), "cudaEventRecord(stop, 0)", "main.cu", 79); 
 # 80
-check(cudaEventSynchronize(stop), "cudaEventSynchronize(stop)", "main.cu", 80); 
+check(cudaEventRecord(stop, 0), "cudaEventRecord(stop, 0)", "main.cu", 80); 
 # 81
-check(cudaEventElapsedTime(&elapsed, start, stop), "cudaEventElapsedTime(&elapsed, start, stop)", "main.cu", 81); 
+check(cudaEventSynchronize(stop), "cudaEventSynchronize(stop)", "main.cu", 81); 
 # 82
-elapsed /= (1000.0F); 
+check(cudaEventElapsedTime(&elapsed, start, stop), "cudaEventElapsedTime(&elapsed, start, stop)", "main.cu", 82); 
 # 83
-printf("Elapsed WITH TCU:\t %fs\n", elapsed); 
-# 87
-cuDoubleComplex *mat = (cuDoubleComplex *)malloc(sizeof(cuDoubleComplex) * (9)); 
-# 88
-cuDoubleComplex *vec = (cuDoubleComplex *)malloc(sizeof(cuDoubleComplex) * (3)); 
-# 89
-cuDoubleComplex *res = (cuDoubleComplex *)malloc(sizeof(cuDoubleComplex) * (3)); 
-# 91
-for (unsigned i = (0); i < (9); i++) { 
-# 92
-(mat[i]) = make_cuDoubleComplex((double)1, (double)1); }  
-# 94
-for (unsigned i = (0); i < (3); i++) { 
-# 95
-(vec[i]) = make_cuDoubleComplex((double)1, (double)1); }  
-# 97
-cuDoubleComplex *d_mat, *d_vec, *d_res; 
-# 98
-cudaMalloc((void **)(&d_mat), sizeof(cuDoubleComplex) * (9)); 
-# 99
-cudaMalloc((void **)(&d_vec), sizeof(cuDoubleComplex) * (3)); 
-# 100
-cudaMalloc((void **)(&d_res), sizeof(cuDoubleComplex) * (3)); 
-# 101
-cudaMemcpy(d_mat, mat, sizeof (mat[0]) * (9), cudaMemcpyHostToDevice); 
-# 102
-cudaMemcpy(d_vec, vec, sizeof (vec[0]) * (3), cudaMemcpyHostToDevice); 
-# 104
-check(cudaEventRecord(start, 0), "cudaEventRecord(start, 0)", "main.cu", 104); 
-# 106
-test_3x3matvec(d_mat, d_vec, d_res, batch); 
-# 108
-check(cudaEventRecord(stop, 0), "cudaEventRecord(stop, 0)", "main.cu", 108); 
-# 109
-check(cudaEventSynchronize(stop), "cudaEventSynchronize(stop)", "main.cu", 109); 
-# 110
-check(cudaEventElapsedTime(&elapsed, start, stop), "cudaEventElapsedTime(&elapsed, start, stop)", "main.cu", 110); 
-# 111
 elapsed /= (1000.0F); 
+# 84
+printf("Elapsed WITH TCU:\t %fs\n", elapsed); 
+# 88
+cuDoubleComplex *mat = (cuDoubleComplex *)malloc(sizeof(cuDoubleComplex) * (9)); 
+# 89
+cuDoubleComplex *vec = (cuDoubleComplex *)malloc(sizeof(cuDoubleComplex) * (3)); 
+# 90
+cuDoubleComplex *res = (cuDoubleComplex *)malloc(sizeof(cuDoubleComplex) * (3)); 
+# 92
+for (unsigned i = (0); i < (9); i++) { 
+# 93
+(mat[i]) = make_cuDoubleComplex((double)1, (double)1); }  
+# 95
+for (unsigned i = (0); i < (3); i++) { 
+# 96
+(vec[i]) = make_cuDoubleComplex((double)1, (double)1); }  
+# 98
+cuDoubleComplex *d_mat, *d_vec, *d_res; 
+# 99
+cudaMalloc((void **)(&d_mat), sizeof(cuDoubleComplex) * (9)); 
+# 100
+cudaMalloc((void **)(&d_vec), sizeof(cuDoubleComplex) * (3)); 
+# 101
+cudaMalloc((void **)(&d_res), sizeof(cuDoubleComplex) * (3)); 
+# 102
+cudaMemcpy(d_mat, mat, sizeof (mat[0]) * (9), cudaMemcpyHostToDevice); 
+# 103
+cudaMemcpy(d_vec, vec, sizeof (vec[0]) * (3), cudaMemcpyHostToDevice); 
+# 105
+check(cudaEventRecord(start, 0), "cudaEventRecord(start, 0)", "main.cu", 105); 
+# 107
+test_3x3matvec(d_mat, d_vec, d_res, batch); 
+# 109
+check(cudaEventRecord(stop, 0), "cudaEventRecord(stop, 0)", "main.cu", 109); 
+# 110
+check(cudaEventSynchronize(stop), "cudaEventSynchronize(stop)", "main.cu", 110); 
+# 111
+check(cudaEventElapsedTime(&elapsed, start, stop), "cudaEventElapsedTime(&elapsed, start, stop)", "main.cu", 111); 
 # 112
+elapsed /= (1000.0F); 
+# 113
 printf("Elapsed complex:\t %fs\n", elapsed); 
-# 114
+# 115
 return 0; 
-# 115 "main.cu"
+# 116 "main.cu"
 } 
 
 # 1 "main.cudafe1.stub.c"

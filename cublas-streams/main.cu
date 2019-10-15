@@ -18,12 +18,13 @@ int main(int argc, char **argv)
   if (argc == 3) {
     mat_side = atoi(argv[1]); // Matrix side
     batch_complex = atoi(argv[2]);    // Number of MMA
+    batch = batch_complex*4;
   } else {
     fprintf(stderr, "./%s SIDE BATCH", argv[0]);
     return EXIT_FAILURE;
   }
 
-  printf("Processing input args: %d side, %d batch\n\n", mat_side, batch);
+  printf("Processing input args: %d side, %d batch\n\n", mat_side, batch_complex);
 
   cublasHandle_t handle;
   cudaEvent_t start, stop;
