@@ -4,7 +4,7 @@
 #include "cublas-utility.h"
 #include "cuda_utility.h"
 
-#define IDX2C(i,j,ld) (((j)*(ld))+(i))
+#define RUN 10
 
 using namespace std;
 
@@ -56,32 +56,47 @@ int main(int argc, char **argv)
   fill_matrix(devPtrB[0], mat_side, mat_side);
   fill_matrix(devPtrC[0], mat_side, mat_side);
 
+  float elapsed = 0;
+  float sum_elapsed = 0;
+
   /****************** Test without tcu ****************************************/
 
-  checkCudaErrors(cudaEventRecord(start, 0));
 
-  mma_batched(handle, mat_side, mat_side, mat_side, devPtrA_dev, devPtrB_dev, devPtrC_dev, batch_complex);
-  display_matrix(devPtrC[0], mat_side, mat_side);
+  for (unsigned i = 0; i < RUN; i++) {
+    checkCudaErrors(cudaEventRecord(start, 0));
 
-  checkCudaErrors(cudaEventRecord(stop, 0));
-  checkCudaErrors(cudaEventSynchronize(stop));
-  float elapsed;
-  checkCudaErrors(cudaEventElapsedTime(&elapsed, start, stop));
-  elapsed /= 1000.0f;
-  printf("Elapsed WITHOUT TCU:\t %fs\n", elapsed);
+    mma_batched(handle, mat_side, mat_side, mat_side, devPtrA_dev, devPtrB_dev, devPtrC_dev, batch_complex);
+    cudaDeviceSynchronize();
+
+    checkCudaErrors(cudaEventRecord(stop, 0));
+    checkCudaErrors(cudaEventSynchronize(stop));
+    checkCudaErrors(cudaEventElapsedTime(&elapsed, start, stop));
+    elapsed /= 1000.0f;
+    sum_elapsed += elapsed;
+  }
+
+  //display_matrix(devPtrC[0], mat_side, mat_side);
+  printf("Elapsed WITHOUT TCU:\t %fs\n", sum_elapsed/RUN);
 
   /*************************** Test with TCU **********************************/
 
-  checkCudaErrors(cudaEventRecord(start, 0));
+  sum_elapsed = 0.0f;
 
-  mma_batched_tcu(handle, mat_side, mat_side, mat_side, (void **)devPtrA_dev, (void **)devPtrB_dev, (void **)devPtrC_dev, batch_complex);
-  display_matrix(devPtrC[0], mat_side, mat_side);
+  for (unsigned i = 0; i < RUN; i++) {
+    checkCudaErrors(cudaEventRecord(start, 0));
 
-  checkCudaErrors(cudaEventRecord(stop, 0));
-  checkCudaErrors(cudaEventSynchronize(stop));
-  checkCudaErrors(cudaEventElapsedTime(&elapsed, start, stop));
-  elapsed /= 1000.0f;
-  printf("Elapsed WITH TCU:\t %fs\n", elapsed);
+    mma_batched_tcu(handle, mat_side, mat_side, mat_side, (void **)devPtrA_dev, (void **)devPtrB_dev, (void **)devPtrC_dev, batch_complex);
+    cudaDeviceSynchronize();
+
+    checkCudaErrors(cudaEventRecord(stop, 0));
+    checkCudaErrors(cudaEventSynchronize(stop));
+    checkCudaErrors(cudaEventElapsedTime(&elapsed, start, stop));
+    elapsed /= 1000.0f;
+    sum_elapsed += elapsed;
+  }
+
+  //display_matrix(devPtrC[0], mat_side, mat_side);
+  printf("Elapsed WITH TCU:\t %fs\n", sum_elapsed/RUN);
 
   /************************* COMPLEX SECTION **********************************/
 
@@ -102,15 +117,21 @@ int main(int argc, char **argv)
   cudaMemcpy(d_mat, mat, sizeof(mat[0]) * 9, cudaMemcpyHostToDevice);
   cudaMemcpy(d_vec, vec, sizeof(vec[0]) * 3, cudaMemcpyHostToDevice);
 
-  checkCudaErrors(cudaEventRecord(start, 0));
+  sum_elapsed = 0.0f;
 
-  test_3x3matvec(d_mat, d_vec, d_res, batch);
+  for (unsigned i = 0; i < RUN; i++) {
+    checkCudaErrors(cudaEventRecord(start, 0));
 
-  checkCudaErrors(cudaEventRecord(stop, 0));
-  checkCudaErrors(cudaEventSynchronize(stop));
-  checkCudaErrors(cudaEventElapsedTime(&elapsed, start, stop));
-  elapsed /= 1000.0f;
-  printf("Elapsed complex:\t %fs\n", elapsed);
+    test_3x3matvec(d_mat, d_vec, d_res, batch);
+    cudaDeviceSynchronize();
+
+    checkCudaErrors(cudaEventRecord(stop, 0));
+    checkCudaErrors(cudaEventSynchronize(stop));
+    checkCudaErrors(cudaEventElapsedTime(&elapsed, start, stop));
+    elapsed /= 1000.0f;
+    sum_elapsed += elapsed;
+  }
+  printf("Elapsed complex:\t %fs\n", sum_elapsed/RUN);
 
   return EXIT_SUCCESS;
 }
