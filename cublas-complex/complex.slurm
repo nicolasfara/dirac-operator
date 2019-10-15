@@ -10,4 +10,4 @@
 module load cuda/10.0
 module load openmpi/4.0.1-cuda10.0
  
-srun ./test-complex-cublas
+srun nvprof -m tensor_precision_fu_utilization ./test-complex-cublas

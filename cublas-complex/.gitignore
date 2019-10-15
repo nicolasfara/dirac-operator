@@ -1,1 +1,10 @@
+*.o
+*dlink*
+*.ii
+*.cubin
+*.gpu
+*.ptx
+*cudafe*
+*.fatbin*
+*.module_id
 test-complex-cublas
