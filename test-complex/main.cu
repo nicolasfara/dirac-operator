@@ -57,7 +57,7 @@ __host__ __device__ static inline void _sub_matrix_real(half *m, cuDoubleComplex
   *(m+16) = __float2half((float) cuCreal(a[3]));
   *(m+17) = __float2half((float) cuCreal(a[4]));
   *(m+18) = __float2half((float) cuCreal(a[5]));
-  
+
   *(m+32) = __float2half((float) cuCreal(a[6]));
   *(m+33) = __float2half((float) cuCreal(a[7]));
   *(m+34) = __float2half((float) cuCreal(a[8]));
@@ -72,7 +72,7 @@ __host__ __device__ static inline void _sub_matrix_imag(half *m, cuDoubleComplex
   *(m+16) = __float2half((float) cuCimag(a[3]));
   *(m+17) = __float2half((float) cuCimag(a[4]));
   *(m+18) = __float2half((float) cuCimag(a[5]));
-  
+
   *(m+32) = __float2half((float) cuCimag(a[6]));
   *(m+33) = __float2half((float) cuCimag(a[7]));
   *(m+34) = __float2half((float) cuCimag(a[8]));
@@ -169,7 +169,7 @@ void complex_mma(__restrict cuDoubleComplex * const mat, __restrict cuDoubleComp
   float *t_re, *t_im;
   cudaMalloc((void **)&t_re, sizeof(float) * 3);
   cudaMalloc((void **)&t_im, sizeof(float) * 3);
-  
+
   add_sub_vec<<<1, 3>>>(t1, t2, t3, t4, t_re, t_im);
   combine<<<1, 3>>>(t_re, t_im, res);
 
@@ -247,7 +247,7 @@ int main(int argc, char **argv)
   b_h = (half *) malloc(sizeof(half) * mat_size);
   c_h = (float *) malloc(sizeof(float) * mat_size);
 
-#ifdef DBUG
+#ifdef DEBUG
   for (unsigned i = 0; i < mat_size; i++) {
     a_h[i] = __float2half((float) i);
     printf("%f ", __half2float(a_h[i]));
@@ -288,8 +288,6 @@ int main(int argc, char **argv)
   }
 #endif
 
-  printf("\n\nLets cmon\n\n");
-
   cuDoubleComplex *mat = (cuDoubleComplex *) malloc(sizeof(cuDoubleComplex) * 9);
   cuDoubleComplex *vec = (cuDoubleComplex *) malloc(sizeof(cuDoubleComplex) * 3);
   cuDoubleComplex *res = (cuDoubleComplex *) malloc(sizeof(cuDoubleComplex) * 3);
@@ -312,7 +310,7 @@ int main(int argc, char **argv)
   cudaEventCreate(&stop);
   float elapsed;
 
-  printf("compute...\n\n");
+  printf("Matrix Vector Multiply with WMMA API...\n\n");
 
   cudaEventRecord(start, 0);
 
@@ -333,12 +331,12 @@ int main(int argc, char **argv)
     printf("IDX %d R: %.1f - I: %.1f\n", i, cuCreal(res[i]), cuCimag(res[i]));
   }
 
-  printf("\n\nLegacy mode\n\n");
+  printf("\n\nMatrix Vector Multiply \"by hand\"...\n\n");
 
   cudaEventRecord(start, 0);
 
   mat_vec_mul<<<1, 1>>>(d_mat, d_vec, d_res);
-  
+
   cudaEventRecord(stop, 0);
   cudaEventSynchronize(stop);
   cudaEventElapsedTime(&elapsed, start, stop);
