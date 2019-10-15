@@ -1,0 +1,10 @@
+*.o
+*dlink*
+*.ii
+*.cubin
+*.gpu
+*.ptx
+*cudafe*
+*.fatbin*
+*.module_id
+cublas-streams
