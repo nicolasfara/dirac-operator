@@ -1,7 +1,7 @@
 #include <iostream>
 #include <stdlib.h>
 #include <cuda_runtime.h>
-#include "cublas-utility.h"
+#include "cublas_utility.h"
 #include "cuda_utility.h"
 
 #define RUN 10
