@@ -34,7 +34,5 @@ quadro: common-cuda.h
 	nvcc $(LATTICE) $(CC_CFLAGS_M1200) main.cu -o test-complex
 
 # CLEAN
-
-clean: 
-	rm -rf *.o gpu-test* 
-
+clean:
+	rm -f *.o *dlink* *.ii *.cubin *.gpu *.ptx *cudafe* *.fatbin* *.module_id test-complex

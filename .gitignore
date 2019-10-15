@@ -82,4 +82,9 @@ dkms.conf
 *.cubin
 *.fatbin
 
+#### SLURM ####
+*.out
+*.err
+
 # End of https://www.gitignore.io/api/c,c++,cuda
+
