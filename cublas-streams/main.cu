@@ -133,5 +133,19 @@ int main(int argc, char **argv)
   }
   printf("Elapsed complex:\t %fs\n", sum_elapsed/RUN);
 
+  /***************** Clean the system *****************************/
+  for (int i = 0; i < batch ; i++) {
+    cudaFree(devPtrA[i]);
+    cudaFree(devPtrB[i]);
+    cudaFree(devPtrC[i]);
+  }
+  cudaFree(devPtrA_dev);
+  cudaFree(devPtrB_dev);
+  cudaFree(devPtrC_dev);
+
+  free(devPtrA);
+  free(devPtrB);
+  free(devPtrC);
+
   return EXIT_SUCCESS;
 }
