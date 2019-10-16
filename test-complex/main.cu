@@ -5,6 +5,7 @@
 
 #define WARP_SIZE 32
 #define BLKSIZE 1024
+#define RUN     1e6
 
 using namespace nvcuda;
 
@@ -314,7 +315,8 @@ int main(int argc, char **argv)
 
   cudaEventRecord(start, 0);
 
-  complex_mma(d_mat, d_vec, d_res);
+  for (unsigned i = 0; i < RUN; i++)
+    complex_mma(d_mat, d_vec, d_res);
 
   cudaEventRecord(stop, 0);
   cudaEventSynchronize(stop);
@@ -322,6 +324,7 @@ int main(int argc, char **argv)
   elapsed /= 1000.0f;
 
   printf("Time elapsed: %f\n\n", elapsed);
+  printf("Time elapsed for signle matmul: %f\n\n", elapsed/RUN);
 
   cudaMemcpy(res, d_res, sizeof(d_res[0]) * 3, cudaMemcpyDeviceToHost);
 
@@ -335,7 +338,8 @@ int main(int argc, char **argv)
 
   cudaEventRecord(start, 0);
 
-  mat_vec_mul<<<1, 1>>>(d_mat, d_vec, d_res);
+  for (unsigned i = 0; i < RUN; i++)
+    mat_vec_mul<<<1, 1>>>(d_mat, d_vec, d_res);
 
   cudaEventRecord(stop, 0);
   cudaEventSynchronize(stop);
@@ -343,6 +347,7 @@ int main(int argc, char **argv)
   elapsed /= 1000.0f;
 
   printf("Time elapsed: %f\n\n", elapsed);
+  printf("Time elapsed for single matmul: %f\n\n", elapsed/RUN);
 
   cudaMemcpy(res, d_res, sizeof(d_res[0]) * 3, cudaMemcpyDeviceToHost);
   for (unsigned i = 0; i < 3; i++) {
