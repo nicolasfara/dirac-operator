@@ -28,17 +28,22 @@ void fill_matrix_half(half *h_ptr, const size_t rows, const size_t cols, const u
   }
 }
 
-void allocate_cpu_side_tcu_matrix_half(void **h_ptr, const size_t rows, const size_t cols, const unsigned matrix_count)
+void allocate_cpu_side_tcu_matrix_half(void **h_ptr, const unsigned matrix_count)
 {
   const unsigned mat_16x16 = 16*16;
   const unsigned mat_16x16_count = matrix_count/5; //On each 16x16 matrix we could insert at most 5 matrix 3x3 on the diagonal of the big one.
   posix_memalign(h_ptr, 128, mat_16x16*mat_16x16_count*sizeof(half));
 }
 
-void fill_tcu_matrix_half(half *h_ptr, const size_t rows, const size_t cols, const unsigned matrix_count)
+void fill_tcu_matrix_half(half *h_ptr, const unsigned matrix_count)
 {
   for (unsigned z = 0; z < matrix_count; z++) {
-    //TODO: compose the matrix on the diagonal
+    for (unsigned i = 0; i < 5; i++) {
+      for (unsigned j = 0; j < 9; j++) {
+        unsigned offset = (256*z)+(51*i);
+        h_ptr[offset+j] = __float2half(j);
+      }
+    }
   }
 }
 
