@@ -39,9 +39,11 @@ void fill_tcu_matrix_half(half *h_ptr, const unsigned matrix_count)
 {
   for (unsigned z = 0; z < matrix_count; z++) {
     for (unsigned i = 0; i < 5; i++) {
-      for (unsigned j = 0; j < 144; j+=16) {
-        unsigned offset = (256*z)+(51*i);
-        h_ptr[offset+j] = __float2half(j);
+      for (unsigned j = 0; j < 3; j++) {
+        for (unsigned y = 0; y < 3; y++) {
+          unsigned offset = (256*z)+(51*i);
+          h_ptr[offset+j*16+y] = __float2half(j);
+        }
       }
     }
   }
