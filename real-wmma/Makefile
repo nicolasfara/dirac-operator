@@ -1,7 +1,7 @@
 CC=nvcc
 
 # V100
-CC_CFLAGS_V100=-O3 --ptxas-options=-v -lineinfo -gencode arch=compute_70,code=sm_70 #-keep
+CC_CFLAGS_V100=-O3 --ptxas-options=-v -lineinfo -gencode arch=compute_70,code=sm_70 -lcublas #-keep
 INLCUDE=-I./common/inc
 
 ###############################################################################
