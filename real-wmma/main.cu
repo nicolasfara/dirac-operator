@@ -27,6 +27,23 @@ int main(int argc, char **argv)
   copy_matrix_to_gpu_half(d_b, h_b, TCU_MAT);
   copy_matrix_to_gpu_half(d_c, h_c, TCU_MAT);
 
+  dot_wmma16x16<<<1, 320>>>(d_a, d_b, d_c);
+
+  copy_matrix_to_cpu_half(h_c, d_c, TCU_MAT);
+
+  for (unsigned i = 0; i < 16; i++) {
+    for (unsigned j = 0; j < 16; j++) {
+      printf("%.1f\t", __half2float(h_c[j+i*16]));
+    }
+    printf("\n");
+  }
+
+  for (unsigned i = 0; i < 16; i++) {
+    for (unsigned j = 0; j < 16; j++) {
+      printf("%.1f\t", __half2float(h_c[256+j+i*16]));
+    }
+    printf("\n");
+  }
 
   return EXIT_SUCCESS;
 }

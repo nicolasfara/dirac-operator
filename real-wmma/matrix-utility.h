@@ -64,6 +64,13 @@ void allocate_gpu_side_matrix_half(void **d_ptr, const unsigned matrix_count)
   checkCudaErrors(cudaMalloc(d_ptr, mat_16x16*mat_16x16_count*sizeof(half)));
 }
 
+void copy_matrix_to_cpu_half(half *h_ptr, half *d_ptr, const unsigned matrix_count)
+{
+  const unsigned mat_16x16 = 16*16;
+  const unsigned mat_16x16_count = matrix_count/5;
+  checkCudaErrors(cudaMemcpy(h_ptr, d_ptr, mat_16x16*mat_16x16_count*sizeof(half), cudaMemcpyDeviceToHost));
+}
+
 void copy_matrix_to_gpu_half(half *d_ptr, half *h_ptr, const unsigned matrix_count)
 {
   const unsigned mat_16x16 = 16*16;
