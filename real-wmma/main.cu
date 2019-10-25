@@ -5,6 +5,7 @@
 #include "matrix-utility.h"
 
 #define TCU_MAT 1920
+#define RUN     10
 
 int main(int argc, char **argv)
 {
@@ -40,14 +41,16 @@ int main(int argc, char **argv)
   dim3 grid_tcu(TCU_MAT/160);
   dim3 block_tcu(1024);
 
-  dot_wmma16x16<<<grid_tcu, block_tcu>>>(d_a_tcu, d_b_tcu, d_c_tcu, TCU_MAT);
-  cudaDeviceSynchronize();
+  for (unsigned i = 0; i < RUN; i++) {
+    dot_wmma16x16<<<grid_tcu, block_tcu>>>(d_a_tcu, d_b_tcu, d_c_tcu, TCU_MAT);
+    cudaDeviceSynchronize();
+  }
 
   cudaEventRecord(stop, 0);
   cudaEventSynchronize(stop);
   cudaEventElapsedTime(&elapsed, start, stop);
   elapsed /= 1000.0f;
-  printf("TCU Version: %fs\n", elapsed);
+  printf("TCU Version: %fs\n", elapsed/RUN);
 
   copyDHTCUMatrixHalf(h_c_tcu, d_c_tcu, TCU_MAT);
 
@@ -109,14 +112,16 @@ int main(int argc, char **argv)
   dim3 grid((TCU_MAT+1023)/1024);
   dim3 block(1024);
 
-  mat_vec_mul<<<grid, block>>>(d_a, d_b, d_c, TCU_MAT);
-  cudaDeviceSynchronize();
+  for (unsigned i = 0; i < RUN; i++) {
+    mat_vec_mul<<<grid, block>>>(d_a, d_b, d_c, TCU_MAT);
+    cudaDeviceSynchronize();
+  }
 
   cudaEventRecord(stop, 0);
   cudaEventSynchronize(stop);
   cudaEventElapsedTime(&elapsed, start, stop);
   elapsed /= 1000.0f;
-  printf("Normal Version: %fs\n", elapsed);
+  printf("Normal Version: %fs\n", elapsed/RUN);
 
   copyDHMatrixHalf(h_c, d_c, 3, 1, TCU_MAT);
   
