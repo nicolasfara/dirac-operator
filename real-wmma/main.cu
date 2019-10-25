@@ -12,53 +12,53 @@ int main(int argc, char **argv)
   cudaEventCreate(&start);
   cudaEventCreate(&stop);
   float elapsed;
-  
-  //half *h_a_tcu;
-  //half *h_b_tcu;
-  //half *h_c_tcu;
-  //cpuAllocTCUMatrixHalf(&h_a_tcu, TCU_MAT);
-  //cpuAllocTCUMatrixHalf(&h_b_tcu, TCU_MAT);
-  //cpuAllocTCUMatrixHalf(&h_c_tcu, TCU_MAT);
-  //fillZeroTCUMatrixHalf(h_a_tcu, TCU_MAT);
-  //fillZeroTCUMatrixHalf(h_b_tcu, TCU_MAT);
-  //fillZeroTCUMatrixHalf(h_c_tcu, TCU_MAT);
-  //fillTCUMatrixHalf(h_a_tcu, TCU_MAT);
-  //fillTCUMatrixHalf(h_b_tcu, TCU_MAT);
 
-  ////for (unsigned i = 0; i < 16; i++) {
-  ////  for (unsigned j = 0; j < 16; j++) {
-  ////    printf("%.1f\t", __half2float(h_a_tcu[j+i*16]));
-  ////  }
-  ////  printf("\n");
-  ////}
+  half *h_a_tcu;
+  half *h_b_tcu;
+  half *h_c_tcu;
+  cpuAllocTCUMatrixHalf(&h_a_tcu, TCU_MAT);
+  cpuAllocTCUMatrixHalf(&h_b_tcu, TCU_MAT);
+  cpuAllocTCUMatrixHalf(&h_c_tcu, TCU_MAT);
+  fillZeroTCUMatrixHalf(h_a_tcu, TCU_MAT);
+  fillZeroTCUMatrixHalf(h_b_tcu, TCU_MAT);
+  fillZeroTCUMatrixHalf(h_c_tcu, TCU_MAT);
+  fillTCUMatrixHalf(h_a_tcu, TCU_MAT);
+  fillTCUMatrixHalf(h_b_tcu, TCU_MAT);
 
-  //half *d_a_tcu;
-  //half *d_b_tcu;
-  //half *d_c_tcu;
-  //gpuAllocTCUMatrixHalf((void **)&d_a_tcu, TCU_MAT);
-  //gpuAllocTCUMatrixHalf((void **)&d_b_tcu, TCU_MAT);
-  //gpuAllocTCUMatrixHalf((void **)&d_c_tcu, TCU_MAT);
-  //copyHDTCUMatrixHalf(d_a_tcu, h_a_tcu, TCU_MAT);
-  //copyHDTCUMatrixHalf(d_b_tcu, h_b_tcu, TCU_MAT);
-  //copyHDTCUMatrixHalf(d_c_tcu, h_c_tcu, TCU_MAT);
+  //for (unsigned i = 0; i < 16; i++) {
+  //  for (unsigned j = 0; j < 16; j++) {
+  //    printf("%.1f\t", __half2float(h_a_tcu[j+i*16]));
+  //  }
+  //  printf("\n");
+  //}
 
-  //cudaStream_t streams[TCU_MAT/5];
-  //for (unsigned i = 0; i < TCU_MAT/5; i++)
-  //  cudaStreamCreate(&streams[i]);
- 
-  //cudaEventRecord(start, 0);
+  half *d_a_tcu;
+  half *d_b_tcu;
+  half *d_c_tcu;
+  gpuAllocTCUMatrixHalf((void **)&d_a_tcu, TCU_MAT);
+  gpuAllocTCUMatrixHalf((void **)&d_b_tcu, TCU_MAT);
+  gpuAllocTCUMatrixHalf((void **)&d_c_tcu, TCU_MAT);
+  copyHDTCUMatrixHalf(d_a_tcu, h_a_tcu, TCU_MAT);
+  copyHDTCUMatrixHalf(d_b_tcu, h_b_tcu, TCU_MAT);
+  copyHDTCUMatrixHalf(d_c_tcu, h_c_tcu, TCU_MAT);
 
-  //for (unsigned i = 0; i < TCU_MAT/5; i++)
-  //  dot_wmma16x16<<<1, 32, 0, streams[i]>>>(d_a_tcu+i*256, d_b_tcu+i*256, d_c_tcu+i*256);
-  //  //dot_wmma16x16<<<1, 32>>>(d_a_tcu+i*256, d_b_tcu+i*256, d_c_tcu+i*256);
+  cudaStream_t streams[TCU_MAT/5];
+  for (unsigned i = 0; i < TCU_MAT/5; i++)
+    cudaStreamCreate(&streams[i]);
 
-  //cudaEventRecord(stop, 0);
-  //cudaEventSynchronize(stop);
-  //cudaEventElapsedTime(&elapsed, start, stop);
-  //elapsed /= 1000.0f;
-  //printf("TCU Version: %fs\n", elapsed);
+  cudaEventRecord(start, 0);
 
-  //copyDHTCUMatrixHalf(h_c_tcu, d_c_tcu, TCU_MAT);
+  for (unsigned i = 0; i < TCU_MAT/5; i++)
+    dot_wmma16x16<<<1, 32, 0, streams[i]>>>(d_a_tcu+i*256, d_b_tcu+i*256, d_c_tcu+i*256);
+    //dot_wmma16x16<<<1, 32>>>(d_a_tcu+i*256, d_b_tcu+i*256, d_c_tcu+i*256);
+
+  cudaEventRecord(stop, 0);
+  cudaEventSynchronize(stop);
+  cudaEventElapsedTime(&elapsed, start, stop);
+  elapsed /= 1000.0f;
+  printf("TCU Version: %fs\n", elapsed);
+
+  copyDHTCUMatrixHalf(h_c_tcu, d_c_tcu, TCU_MAT);
 
   ////////// End TCU version////////////////////////////////////////////
   //////////////////////////////////////////////////////////////////////
@@ -69,7 +69,7 @@ int main(int argc, char **argv)
   cpuAllocMatrixHalf(&h_a, 3, 3, TCU_MAT);
   cpuAllocMatrixHalf(&h_b, 3, 1, TCU_MAT);
   cpuAllocMatrixHalf(&h_c, 3, 1, TCU_MAT);
-  
+
   half *d_a;
   half *d_b;
   half *d_c;
@@ -92,11 +92,17 @@ int main(int argc, char **argv)
   elapsed /= 1000.0f;
   printf("Normal Version: %fs\n", elapsed);
 
+  free(h_a);
+  free(h_b);
+  free(h_c);
+  cudaFree(d_a);
+  cudaFree(d_b);
+  cudaFree(d_c);
 
   //////////////////////// Test cublas full matrix /////////////////////////
-  half *d_a_c; 
-  half *d_b_c; 
-  half *d_c_c; 
+  /*half *d_a_c;
+  half *d_b_c;
+  half *d_c_c;
   cudaMalloc((void **)&d_a_c, sizeof(half)*3072*3072);
   cudaMalloc((void **)&d_b_c, sizeof(half)*3072*3072);
   cudaMalloc((void **)&d_c_c, sizeof(half)*3072*3072);
@@ -115,7 +121,7 @@ int main(int argc, char **argv)
   cudaEventSynchronize(stop);
   cudaEventElapsedTime(&elapsed, start, stop);
   elapsed /= 1000.0f;
-  printf("Cublas Version: %fs", elapsed);
+  printf("Cublas Version: %fs", elapsed);*/
 
   //free(h_a_tcu);
   //free(h_b_tcu);
