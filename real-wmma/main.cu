@@ -6,6 +6,8 @@
 
 #define TCU_MAT 1920
 #define RUN     10
+#define BLKSIZE 1024
+#define MAT_PER_BLOCK 160
 
 int main(int argc, char **argv)
 {
@@ -38,8 +40,8 @@ int main(int argc, char **argv)
 
   cudaEventRecord(start, 0);
 
-  dim3 grid_tcu(TCU_MAT/160);
-  dim3 block_tcu(1024);
+  dim3 grid_tcu(TCU_MAT/MAT_PER_BLOCK);
+  dim3 block_tcu(BLKSIZE);
 
   for (unsigned i = 0; i < RUN; i++) {
     dot_wmma16x16<<<grid_tcu, block_tcu>>>(d_a_tcu, d_b_tcu, d_c_tcu, TCU_MAT);
@@ -109,8 +111,8 @@ int main(int argc, char **argv)
 
   cudaEventRecord(start, 0);
 
-  dim3 grid((TCU_MAT+1023)/1024);
-  dim3 block(1024);
+  dim3 grid((TCU_MAT+BLKSIZE-1)/BLKSIZE);
+  dim3 block(BLKSIZE);
 
   for (unsigned i = 0; i < RUN; i++) {
     mat_vec_mul<<<grid, block>>>(d_a, d_b, d_c, TCU_MAT);
@@ -124,7 +126,7 @@ int main(int argc, char **argv)
   printf("Normal Version: %fs\n", elapsed/RUN);
 
   copyDHMatrixHalf(h_c, d_c, 3, 1, TCU_MAT);
-  
+
   //printf("After:\n");
   //for (unsigned i = 0; i < 12; i++) {
   //  if (i % 3 == 0) printf("\n");
