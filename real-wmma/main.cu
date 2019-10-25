@@ -164,11 +164,8 @@ int main(int argc, char **argv)
   elapsed /= 1000.0f;
   printf("Cublas Version: %fs", elapsed);
 
-  //free(h_a_tcu);
-  //free(h_b_tcu);
-  //free(h_c_tcu);
-  //cudaFree(d_a_tcu);
-  //cudaFree(d_b_tcu);
-  //cudaFree(d_c_tcu);
+  cudaFree(d_a_c);
+  cudaFree(d_b_c);
+  cudaFree(d_c_c);
   return EXIT_SUCCESS;
 }
