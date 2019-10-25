@@ -83,6 +83,15 @@ int main(int argc, char **argv)
   cpuAllocMatrixHalf(&h_a, 3, 3, TCU_MAT);
   cpuAllocMatrixHalf(&h_b, 3, 1, TCU_MAT);
   cpuAllocMatrixHalf(&h_c, 3, 1, TCU_MAT);
+  fillMatrixHalf(h_a, 3, 3, TCU_MAT);
+  fillMatrixHalf(h_b, 3, 1, TCU_MAT);
+  fillMatrixHalf(h_c, 3, 1, TCU_MAT);
+
+  //printf("Before\n");
+  //for (unsigned i = 0; i < 12; i++) {
+  //  if (i % 3 == 0) printf("\n");
+  //  printf("%f ", __half2float(h_c[i]));
+  //}
 
   half *d_a;
   half *d_b;
@@ -109,10 +118,13 @@ int main(int argc, char **argv)
   elapsed /= 1000.0f;
   printf("Normal Version: %fs\n", elapsed);
 
-  for (unsigned i = 0; i < 12; i++) {
-    if (i % 3 == 0) printf("\n");
-    printf("%f ", __half2float(h_c[i]));
-  }
+  copyDHMatrixHalf(h_c, d_c, 3, 1, TCU_MAT);
+  
+  //printf("After:\n");
+  //for (unsigned i = 0; i < 12; i++) {
+  //  if (i % 3 == 0) printf("\n");
+  //  printf("%f ", __half2float(h_c[i]));
+  //}
 
   free(h_a);
   free(h_b);
