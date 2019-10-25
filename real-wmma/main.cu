@@ -109,6 +109,11 @@ int main(int argc, char **argv)
   elapsed /= 1000.0f;
   printf("Normal Version: %fs\n", elapsed);
 
+  for (unsigned i = 0; i < 12; i++) {
+    if (i % 3 == 0) printf("\n");
+    printf("%f ", __half2float(h_c[i]));
+  }
+
   free(h_a);
   free(h_b);
   free(h_c);
