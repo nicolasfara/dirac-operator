@@ -4,7 +4,7 @@
 #include "wmma-common.h"
 #include "matrix-utility.h"
 
-#define TCU_MAT 1024
+#define TCU_MAT 10
 
 int main(int argc, char **argv)
 {
@@ -25,13 +25,6 @@ int main(int argc, char **argv)
   fillTCUMatrixHalf(h_a_tcu, TCU_MAT);
   fillTCUMatrixHalf(h_b_tcu, TCU_MAT);
 
-  //for (unsigned i = 0; i < 16; i++) {
-  //  for (unsigned j = 0; j < 16; j++) {
-  //    printf("%.1f\t", __half2float(h_a_tcu[j+i*16]));
-  //  }
-  //  printf("\n");
-  //}
-
   half *d_a_tcu;
   half *d_b_tcu;
   half *d_c_tcu;
@@ -48,9 +41,10 @@ int main(int argc, char **argv)
 
   cudaEventRecord(start, 0);
 
-  for (unsigned i = 0; i < TCU_MAT/5; i++)
-    dot_wmma16x16<<<1, 32, 0, streams[i]>>>(d_a_tcu+i*256, d_b_tcu+i*256, d_c_tcu+i*256);
+  //for (unsigned i = 0; i < TCU_MAT/5; i++)
+    //dot_wmma16x16<<<1, 32, 0, streams[i]>>>(d_a_tcu+i*256, d_b_tcu+i*256, d_c_tcu+i*256);
     //dot_wmma16x16<<<1, 32>>>(d_a_tcu+i*256, d_b_tcu+i*256, d_c_tcu+i*256);
+  dot_wmma16x16<<<1, 64>>>(d_a_tcu, d_b_tcu, d_c_tcu);
 
   cudaEventRecord(stop, 0);
   cudaEventSynchronize(stop);
@@ -59,6 +53,23 @@ int main(int argc, char **argv)
   printf("TCU Version: %fs\n", elapsed);
 
   copyDHTCUMatrixHalf(h_c_tcu, d_c_tcu, TCU_MAT);
+
+  for (unsigned i = 0; i < 16; i++) {
+    for (unsigned j = 0; j < 16; j++) {
+      printf("%.1f\t", __half2float(h_c_tcu[j+i*16]));
+    }
+    printf("\n");
+  }
+
+  printf("\n Second\n");
+
+  for (unsigned i = 0; i < 16; i++) {
+    for (unsigned j = 0; j < 16; j++) {
+      printf("%.1f\t", __half2float((h_c_tcu+256)[j+i*16]));
+    }
+    printf("\n");
+  }
+
 
   ////////// End TCU version////////////////////////////////////////////
   //////////////////////////////////////////////////////////////////////
