@@ -11,31 +11,31 @@
 #include <helper_cuda.h>
 #include <helper_functions.h>
 
-void allocate_cpu_side_matrix_half(half **h_ptr, const size_t rows, const size_t cols, const unsigned matrix_count)
+void cpuAllocMatrixHalf(half **h_ptr, const size_t rows, const size_t cols, const unsigned matrix_count)
 {
   // Allocate on CPU the matrix with allignment
   *h_ptr = (half *) malloc(rows*cols*matrix_count*sizeof(half));
 }
 
-void allocate_gpu_side_matrix_half(void **d_ptr, const size_t rows, const size_t cols, const unsigned matrix_count)
+void gpuAllocMatrixHalf(void **d_ptr, const size_t rows, const size_t cols, const unsigned matrix_count)
 {
   checkCudaErrors(cudaMalloc(d_ptr, rows*cols*matrix_count*sizeof(half)));
   checkCudaErrors(cudaGetLastError());
 }
 
-void copy_matrix_to_cpu_half(half *h_ptr, half *d_ptr, unsigned rows, unsigned cols, const unsigned matrix_count)
+void copyDHMatrixHalf(half *h_ptr, half *d_ptr, unsigned rows, unsigned cols, const unsigned matrix_count)
 {
   checkCudaErrors(cudaMemcpy(h_ptr, d_ptr, rows*cols*matrix_count*sizeof(half), cudaMemcpyDeviceToHost));
   checkCudaErrors(cudaGetLastError());
 }
 
-void copy_matrix_to_gpu_half(half *d_ptr, half *h_ptr, unsigned rows, unsigned cols, const unsigned matrix_count)
+void copyHDMatrixHalf(half *d_ptr, half *h_ptr, unsigned rows, unsigned cols, const unsigned matrix_count)
 {
   checkCudaErrors(cudaMemcpy(d_ptr, h_ptr, rows*cols*matrix_count*sizeof(half), cudaMemcpyHostToDevice));
   checkCudaErrors(cudaGetLastError());
 }
 
-void fill_matrix_half(half *h_ptr, const size_t rows, const size_t cols, const unsigned matrix_count)
+void fillMatrixHalf(half *h_ptr, const size_t rows, const size_t cols, const unsigned matrix_count)
 {
   for (unsigned z = 0; z < matrix_count; z++) {
     for (unsigned i = 0; i < rows; i++)
@@ -49,14 +49,14 @@ void fill_matrix_half(half *h_ptr, const size_t rows, const size_t cols, const u
 ////////////////////////////////// TCU Version //////////////////////////////////////////////
 
 
-void allocate_cpu_side_tcu_matrix_half(half **h_ptr, const unsigned matrix_count)
+void cpuAllocTCUMatrixHalf(half **h_ptr, const unsigned matrix_count)
 {
   const unsigned mat_16x16 = 16*16;
   const unsigned mat_16x16_count = matrix_count/5; //On each 16x16 matrix we could insert at most 5 matrix 3x3 on the diagonal of the big one.
   *h_ptr = (half *) malloc(mat_16x16*mat_16x16_count*sizeof(half));
 }
 
-void allocate_gpu_side_tcu_matrix_half(void **d_ptr, const unsigned matrix_count)
+void gpuAllocTCUMatrixHalf(void **d_ptr, const unsigned matrix_count)
 {
   const unsigned mat_16x16 = 16*16;
   const unsigned mat_16x16_count = matrix_count/5;
@@ -64,7 +64,7 @@ void allocate_gpu_side_tcu_matrix_half(void **d_ptr, const unsigned matrix_count
   checkCudaErrors(cudaGetLastError());
 }
 
-void copy_tcu_matrix_to_cpu_half(half *h_ptr, half *d_ptr, const unsigned matrix_count)
+void copyDHTCUMatrixHalf(half *h_ptr, half *d_ptr, const unsigned matrix_count)
 {
   const unsigned mat_16x16 = 16*16;
   const unsigned mat_16x16_count = matrix_count/5;
@@ -72,7 +72,7 @@ void copy_tcu_matrix_to_cpu_half(half *h_ptr, half *d_ptr, const unsigned matrix
   checkCudaErrors(cudaGetLastError());
 }
 
-void copy_tcu_matrix_to_gpu_half(half *d_ptr, half *h_ptr, const unsigned matrix_count)
+void copyHDTCUMatrixHalf(half *d_ptr, half *h_ptr, const unsigned matrix_count)
 {
   const unsigned mat_16x16 = 16*16;
   const unsigned mat_16x16_count = matrix_count/5;
@@ -80,7 +80,7 @@ void copy_tcu_matrix_to_gpu_half(half *d_ptr, half *h_ptr, const unsigned matrix
   checkCudaErrors(cudaGetLastError());
 }
 
-void fill_zero_tcu_matrix(half *h_ptr, const unsigned matrix_count)
+void fillZeroTCUMatrixHalf(half *h_ptr, const unsigned matrix_count)
 {
   const unsigned mat_16x16 = 16*16;
   const unsigned mat_16x16_count = matrix_count/5; //On each 16x16 matrix we could insert at most 5 matrix 3x3 on the diagonal of the big one.
@@ -88,7 +88,7 @@ void fill_zero_tcu_matrix(half *h_ptr, const unsigned matrix_count)
     h_ptr[i] = __float2half(0.0f);
 }
 
-void fill_tcu_matrix_half(half *h_ptr, const unsigned matrix_count)
+void fillTCUMatrixHalf(half *h_ptr, const unsigned matrix_count)
 {
   for (unsigned z = 0; z < matrix_count; z++) {
     for (unsigned i = 0; i < 5; i++) {

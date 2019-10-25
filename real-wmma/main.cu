@@ -16,14 +16,14 @@ int main(int argc, char **argv)
   //half *h_a_tcu;
   //half *h_b_tcu;
   //half *h_c_tcu;
-  //allocate_cpu_side_tcu_matrix_half(&h_a_tcu, TCU_MAT);
-  //allocate_cpu_side_tcu_matrix_half(&h_b_tcu, TCU_MAT);
-  //allocate_cpu_side_tcu_matrix_half(&h_c_tcu, TCU_MAT);
-  //fill_zero_tcu_matrix(h_a_tcu, TCU_MAT);
-  //fill_zero_tcu_matrix(h_b_tcu, TCU_MAT);
-  //fill_zero_tcu_matrix(h_c_tcu, TCU_MAT);
-  //fill_tcu_matrix_half(h_a_tcu, TCU_MAT);
-  //fill_tcu_matrix_half(h_b_tcu, TCU_MAT);
+  //cpuAllocTCUMatrixHalf(&h_a_tcu, TCU_MAT);
+  //cpuAllocTCUMatrixHalf(&h_b_tcu, TCU_MAT);
+  //cpuAllocTCUMatrixHalf(&h_c_tcu, TCU_MAT);
+  //fillZeroTCUMatrixHalf(h_a_tcu, TCU_MAT);
+  //fillZeroTCUMatrixHalf(h_b_tcu, TCU_MAT);
+  //fillZeroTCUMatrixHalf(h_c_tcu, TCU_MAT);
+  //fillTCUMatrixHalf(h_a_tcu, TCU_MAT);
+  //fillTCUMatrixHalf(h_b_tcu, TCU_MAT);
 
   ////for (unsigned i = 0; i < 16; i++) {
   ////  for (unsigned j = 0; j < 16; j++) {
@@ -35,12 +35,12 @@ int main(int argc, char **argv)
   //half *d_a_tcu;
   //half *d_b_tcu;
   //half *d_c_tcu;
-  //allocate_gpu_side_tcu_matrix_half((void **)&d_a_tcu, TCU_MAT);
-  //allocate_gpu_side_tcu_matrix_half((void **)&d_b_tcu, TCU_MAT);
-  //allocate_gpu_side_tcu_matrix_half((void **)&d_c_tcu, TCU_MAT);
-  //copy_tcu_matrix_to_gpu_half(d_a_tcu, h_a_tcu, TCU_MAT);
-  //copy_tcu_matrix_to_gpu_half(d_b_tcu, h_b_tcu, TCU_MAT);
-  //copy_tcu_matrix_to_gpu_half(d_c_tcu, h_c_tcu, TCU_MAT);
+  //gpuAllocTCUMatrixHalf((void **)&d_a_tcu, TCU_MAT);
+  //gpuAllocTCUMatrixHalf((void **)&d_b_tcu, TCU_MAT);
+  //gpuAllocTCUMatrixHalf((void **)&d_c_tcu, TCU_MAT);
+  //copyHDTCUMatrixHalf(d_a_tcu, h_a_tcu, TCU_MAT);
+  //copyHDTCUMatrixHalf(d_b_tcu, h_b_tcu, TCU_MAT);
+  //copyHDTCUMatrixHalf(d_c_tcu, h_c_tcu, TCU_MAT);
 
   //cudaStream_t streams[TCU_MAT/5];
   //for (unsigned i = 0; i < TCU_MAT/5; i++)
@@ -58,7 +58,7 @@ int main(int argc, char **argv)
   //elapsed /= 1000.0f;
   //printf("TCU Version: %fs\n", elapsed);
 
-  //copy_tcu_matrix_to_cpu_half(h_c_tcu, d_c_tcu, TCU_MAT);
+  //copyDHTCUMatrixHalf(h_c_tcu, d_c_tcu, TCU_MAT);
 
   ////////// End TCU version////////////////////////////////////////////
   //////////////////////////////////////////////////////////////////////
@@ -66,20 +66,20 @@ int main(int argc, char **argv)
   half *h_a;
   half *h_b;
   half *h_c;
-  allocate_cpu_side_matrix_half(&h_a, 3, 3, TCU_MAT);
-  allocate_cpu_side_matrix_half(&h_b, 3, 1, TCU_MAT);
-  allocate_cpu_side_matrix_half(&h_c, 3, 1, TCU_MAT);
+  cpuAllocMatrixHalf(&h_a, 3, 3, TCU_MAT);
+  cpuAllocMatrixHalf(&h_b, 3, 1, TCU_MAT);
+  cpuAllocMatrixHalf(&h_c, 3, 1, TCU_MAT);
   
   half *d_a;
   half *d_b;
   half *d_c;
 
-  allocate_gpu_side_matrix_half((void **)&d_a, 3, 3, TCU_MAT);
-  allocate_gpu_side_matrix_half((void **)&d_b, 3, 1, TCU_MAT);
-  allocate_gpu_side_matrix_half((void **)&d_c, 3, 1, TCU_MAT);
-  copy_matrix_to_gpu_half(d_a, h_a, 3, 3, TCU_MAT);
-  copy_matrix_to_gpu_half(d_b, h_b, 3, 1, TCU_MAT);
-  copy_matrix_to_gpu_half(d_c, h_c, 3, 1, TCU_MAT);
+  gpuAllocMatrixHalf((void **)&d_a, 3, 3, TCU_MAT);
+  gpuAllocMatrixHalf((void **)&d_b, 3, 1, TCU_MAT);
+  gpuAllocMatrixHalf((void **)&d_c, 3, 1, TCU_MAT);
+  copyHDMatrixHalf(d_a, h_a, 3, 3, TCU_MAT);
+  copyHDMatrixHalf(d_b, h_b, 3, 1, TCU_MAT);
+  copyHDMatrixHalf(d_c, h_c, 3, 1, TCU_MAT);
 
   cudaEventRecord(start, 0);
 
