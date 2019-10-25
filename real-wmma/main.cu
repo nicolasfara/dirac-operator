@@ -4,7 +4,7 @@
 #include "wmma-common.h"
 #include "matrix-utility.h"
 
-#define TCU_MAT 10
+#define TCU_MAT 160
 
 int main(int argc, char **argv)
 {
@@ -35,16 +35,10 @@ int main(int argc, char **argv)
   copyHDTCUMatrixHalf(d_b_tcu, h_b_tcu, TCU_MAT);
   copyHDTCUMatrixHalf(d_c_tcu, h_c_tcu, TCU_MAT);
 
-  cudaStream_t streams[TCU_MAT/5];
-  for (unsigned i = 0; i < TCU_MAT/5; i++)
-    cudaStreamCreate(&streams[i]);
-
   cudaEventRecord(start, 0);
 
-  //for (unsigned i = 0; i < TCU_MAT/5; i++)
-    //dot_wmma16x16<<<1, 32, 0, streams[i]>>>(d_a_tcu+i*256, d_b_tcu+i*256, d_c_tcu+i*256);
-    //dot_wmma16x16<<<1, 32>>>(d_a_tcu+i*256, d_b_tcu+i*256, d_c_tcu+i*256);
-  dot_wmma16x16<<<1, 64>>>(d_a_tcu, d_b_tcu, d_c_tcu);
+  unsigned warp = (TCU_MAT/5)*32;
+  dot_wmma16x16<<<1, warp>>>(d_a_tcu, d_b_tcu, d_c_tcu);
 
   cudaEventRecord(stop, 0);
   cudaEventSynchronize(stop);
