@@ -105,49 +105,53 @@ void fillTCUMatrixHalf(half *h_ptr, const unsigned matrix_count)
 
 ///////////////////////////////////// Kernels //////////////////////////////////////////
 
-__global__ void mat_vec_mul(half *matrix, half *in_vect, half *out_vect)
+__global__ void mat_vec_mul(half *matrix, half *in_vect, half *out_vect, const unsigned matrix_count)
 {
   const unsigned i = threadIdx.x + blockIdx.x*blockDim.x;
-  half vec0 = (in_vect+i*3)[0];
-  half vec1 = (in_vect+i*3)[1];
-  half vec2 = (in_vect+i*3)[2];
+  if (i < matrix_count) {
+    half vec0 = (in_vect+i*3)[0];
+    half vec1 = (in_vect+i*3)[1];
+    half vec2 = (in_vect+i*3)[2];
 
-  half mat00 = (matrix+i*9)[0];
-  half mat01 = (matrix+i*9)[1];
-  half mat02 = (matrix+i*9)[2];
+    half mat00 = (matrix+i*9)[0];
+    half mat01 = (matrix+i*9)[1];
+    half mat02 = (matrix+i*9)[2];
 
-  half mat10 = (matrix+i*9)[3];
-  half mat11 = (matrix+i*9)[4];
-  half mat12 = (matrix+i*9)[5];
+    half mat10 = (matrix+i*9)[3];
+    half mat11 = (matrix+i*9)[4];
+    half mat12 = (matrix+i*9)[5];
 
-  half mat20 = (matrix+i*9)[6];
-  half mat21 = (matrix+i*9)[7];
-  half mat22 = (matrix+i*9)[8];
+    half mat20 = (matrix+i*9)[6];
+    half mat21 = (matrix+i*9)[7];
+    half mat22 = (matrix+i*9)[8];
 
-//Multiply 3rd row by eta
-  //mat20 = make_cuDoubleComplex(cuCreal(mat20)*eta, cuCimag(mat20)*eta);
-  //mat21 = make_cuDoubleComplex(cuCreal(mat21)*eta, cuCimag(mat21)*eta);
-  //mat22 = make_cuDoubleComplex(cuCreal(mat22)*eta, cuCimag(mat22)*eta);
+    //Multiply 3rd row by eta
+    //mat20 = make_cuDoubleComplex(cuCreal(mat20)*eta, cuCimag(mat20)*eta);
+    //mat21 = make_cuDoubleComplex(cuCreal(mat21)*eta, cuCimag(mat21)*eta);
+    //mat22 = make_cuDoubleComplex(cuCreal(mat22)*eta, cuCimag(mat22)*eta);
 
-  (out_vect+i*3)[0] = mat00*vec0 + mat01*vec1 + mat02*vec2;
+    (out_vect+i*3)[0] = mat00*vec0 + mat01*vec1 + mat02*vec2;
 
-  (out_vect+i*3)[1] = mat10*vec0 + mat11*vec1 + mat12*vec2;
+    (out_vect+i*3)[1] = mat10*vec0 + mat11*vec1 + mat12*vec2;
 
-  (out_vect+i*3)[2] = mat20*vec0 + mat21*vec1 + mat22*vec2;
+    (out_vect+i*3)[2] = mat20*vec0 + mat21*vec1 + mat22*vec2;
+  }
 }
 
-__global__ void dot_wmma16x16(half *a, half *b, half *c)
+__global__ void dot_wmma16x16(half *a, half *b, half *c, const unsigned matrix_count)
 {
   unsigned offset = (threadIdx.x + blockIdx.x * blockDim.x)/32; //32 -> warp for WMMA
-  offset = offset*256; // 16x16=256 element for each matrix
-  wmma::fragment<wmma::matrix_a, 16, 16, 16, half, wmma::row_major> a_frag;
-  wmma::fragment<wmma::matrix_b, 16, 16, 16, half, wmma::row_major> b_frag;
-  wmma::fragment<wmma::accumulator, 16, 16, 16, half> c_frag;
-  wmma::load_matrix_sync(a_frag, a+offset, 16);
-  wmma::load_matrix_sync(b_frag, b+offset, 16);
-  wmma::fill_fragment(c_frag, 0.0f);
-  wmma::mma_sync(c_frag, a_frag, b_frag, c_frag);
-  wmma::store_matrix_sync(c+offset, c_frag, 16, wmma::mem_row_major);
+  const unsigned index_offset = offset*256; // 16x16=256 element for each matrix
+  if (offset < matrix_count/5) {
+    wmma::fragment<wmma::matrix_a, 16, 16, 16, half, wmma::row_major> a_frag;
+    wmma::fragment<wmma::matrix_b, 16, 16, 16, half, wmma::row_major> b_frag;
+    wmma::fragment<wmma::accumulator, 16, 16, 16, half> c_frag;
+    wmma::load_matrix_sync(a_frag, a+index_offset, 16);
+    wmma::load_matrix_sync(b_frag, b+index_offset, 16);
+    wmma::fill_fragment(c_frag, 0.0f);
+    wmma::mma_sync(c_frag, a_frag, b_frag, c_frag);
+    wmma::store_matrix_sync(c+index_offset, c_frag, 16, wmma::mem_row_major);
+  }
 }
 
 

@@ -4,7 +4,7 @@
 #include "wmma-common.h"
 #include "matrix-utility.h"
 
-#define TCU_MAT 160
+#define TCU_MAT 1920
 
 int main(int argc, char **argv)
 {
@@ -37,8 +37,11 @@ int main(int argc, char **argv)
 
   cudaEventRecord(start, 0);
 
-  unsigned warp = (TCU_MAT/5)*32;
-  dot_wmma16x16<<<1, warp>>>(d_a_tcu, d_b_tcu, d_c_tcu);
+  dim3 grid_tcu(TCU_MAT/160);
+  dim3 block_tcu(1024);
+
+  dot_wmma16x16<<<grid_tcu, block_tcu>>>(d_a_tcu, d_b_tcu, d_c_tcu, TCU_MAT);
+  cudaDeviceSynchronize();
 
   cudaEventRecord(stop, 0);
   cudaEventSynchronize(stop);
@@ -48,21 +51,27 @@ int main(int argc, char **argv)
 
   copyDHTCUMatrixHalf(h_c_tcu, d_c_tcu, TCU_MAT);
 
-  for (unsigned i = 0; i < 16; i++) {
-    for (unsigned j = 0; j < 16; j++) {
-      printf("%.1f\t", __half2float(h_c_tcu[j+i*16]));
-    }
-    printf("\n");
-  }
+  //for (unsigned i = 0; i < 16; i++) {
+  //  for (unsigned j = 0; j < 16; j++) {
+  //    printf("%.1f\t", __half2float(h_c_tcu[j+i*16]));
+  //  }
+  //  printf("\n");
+  //}
 
-  printf("\n Second\n");
+  //printf("\n Second\n");
 
-  for (unsigned i = 0; i < 16; i++) {
-    for (unsigned j = 0; j < 16; j++) {
-      printf("%.1f\t", __half2float((h_c_tcu+256)[j+i*16]));
-    }
-    printf("\n");
-  }
+  //for (unsigned i = 0; i < 16; i++) {
+  //  for (unsigned j = 0; j < 16; j++) {
+  //    printf("%.1f\t", __half2float((h_c_tcu+256*383)[j+i*16]));
+  //  }
+  //  printf("\n");
+  //}
+  cudaFree(d_a_tcu);
+  cudaFree(d_b_tcu);
+  cudaFree(d_c_tcu);
+  free(h_a_tcu);
+  free(h_b_tcu);
+  free(h_c_tcu);
 
 
   ////////// End TCU version////////////////////////////////////////////
@@ -88,8 +97,11 @@ int main(int argc, char **argv)
 
   cudaEventRecord(start, 0);
 
-  //for (unsigned i = 0; i < TCU_MAT; i++)
-  mat_vec_mul<<<1, TCU_MAT>>>(d_a, d_b, d_c);
+  dim3 grid((TCU_MAT+1023)/1024);
+  dim3 block(1024);
+
+  mat_vec_mul<<<grid, block>>>(d_a, d_b, d_c, TCU_MAT);
+  cudaDeviceSynchronize();
 
   cudaEventRecord(stop, 0);
   cudaEventSynchronize(stop);
@@ -105,12 +117,12 @@ int main(int argc, char **argv)
   cudaFree(d_c);
 
   //////////////////////// Test cublas full matrix /////////////////////////
-  /*half *d_a_c;
+  half *d_a_c;
   half *d_b_c;
   half *d_c_c;
-  cudaMalloc((void **)&d_a_c, sizeof(half)*3072*3072);
-  cudaMalloc((void **)&d_b_c, sizeof(half)*3072*3072);
-  cudaMalloc((void **)&d_c_c, sizeof(half)*3072*3072);
+  cudaMalloc((void **)&d_a_c, sizeof(half)*5760*5760);
+  cudaMalloc((void **)&d_b_c, sizeof(half)*5760*5760);
+  cudaMalloc((void **)&d_c_c, sizeof(half)*5760*5760);
 
   cublasHandle_t handle;
   cublasCreate(&handle);
@@ -120,13 +132,13 @@ int main(int argc, char **argv)
 
   cudaEventRecord(start, 0);
 
-  cublasGemmEx(handle, CUBLAS_OP_N, CUBLAS_OP_N, 3072, 3072, 3072, &alpha, d_a_c, CUDA_R_16F, 3072, d_b_c, CUDA_R_16F, 3072, &beta, d_c_c, CUDA_R_16F, 3072, CUDA_R_16F, CUBLAS_GEMM_DEFAULT_TENSOR_OP);
+  cublasGemmEx(handle, CUBLAS_OP_N, CUBLAS_OP_N, 5760, 5760, 5760, &alpha, d_a_c, CUDA_R_16F, 5760, d_b_c, CUDA_R_16F, 5760, &beta, d_c_c, CUDA_R_16F, 5760, CUDA_R_16F, CUBLAS_GEMM_DEFAULT_TENSOR_OP);
 
   cudaEventRecord(stop, 0);
   cudaEventSynchronize(stop);
   cudaEventElapsedTime(&elapsed, start, stop);
   elapsed /= 1000.0f;
-  printf("Cublas Version: %fs", elapsed);*/
+  printf("Cublas Version: %fs", elapsed);
 
   //free(h_a_tcu);
   //free(h_b_tcu);
