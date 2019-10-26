@@ -10,4 +10,5 @@
 module load cuda/10.0
 module load openmpi/4.0.1-cuda10.0
  
-srun nvprof --print-gpu-trace -m tensor_precision_fu_utilization ./real-wmma
+#run nvprof --print-gpu-trace -m tensor_precision_fu_utilization ./real-wmma
+srun nvprof --export-profile real-wmma.prof ./real-wmma
