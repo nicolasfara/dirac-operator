@@ -13,8 +13,8 @@ all: volta
 # NVIDIA CUDA COMPILER
 
 volta:
-	nvcc $(CC_CFLAGS_V100) $(INLCUDE) main.cu -o real-wmma
+	nvcc $(CC_CFLAGS_V100) $(INLCUDE) main.cu -o test-16real
 
 # CLEAN
 clean:
-	rm -f *.o *dlink* *.ii *.cubin *.gpu *.ptx *cudafe* *.fatbin* *.module_id real-wmma
+	rm -f *.o *dlink* *.ii *.cubin *.gpu *.ptx *cudafe* *.fatbin* *.module_id test-16real

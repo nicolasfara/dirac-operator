@@ -157,7 +157,7 @@ __global__ void dot_wmma16x16(half *a, half *b, half *c, const unsigned matrix_c
 {
   unsigned offset = (threadIdx.x + blockIdx.x * blockDim.x)/32; //32 -> warp for WMMA
   const unsigned index_offset = offset*256; // 16x16=256 element for each matrix
-  if (offset < matrix_count/5) {
+  if (offset < matrix_count/16) {
     wmma::fragment<wmma::matrix_a, 16, 16, 16, half, wmma::row_major> a_frag;
     wmma::fragment<wmma::matrix_b, 16, 16, 16, half, wmma::row_major> b_frag;
     wmma::fragment<wmma::accumulator, 16, 16, 16, half> c_frag;

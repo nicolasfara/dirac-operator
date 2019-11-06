@@ -56,21 +56,21 @@ int main(int argc, char **argv)
 
   copyDHTCUMatrixHalf(h_c_tcu, d_c_tcu, TCU_MAT);
 
-  //for (unsigned i = 0; i < 16; i++) {
-  //  for (unsigned j = 0; j < 16; j++) {
-  //    printf("%.1f\t", __half2float(h_c_tcu[j+i*16]));
-  //  }
-  //  printf("\n");
-  //}
+  for (unsigned i = 0; i < 16; i++) {
+    for (unsigned j = 0; j < 16; j++) {
+      printf("%.1f\t", __half2float(h_a_tcu[j+i*16]));
+    }
+    printf("\n");
+  }
 
-  //printf("\n Second\n");
+  printf("\n Second\n");
 
-  //for (unsigned i = 0; i < 16; i++) {
-  //  for (unsigned j = 0; j < 16; j++) {
-  //    printf("%.1f\t", __half2float((h_c_tcu+256*383)[j+i*16]));
-  //  }
-  //  printf("\n");
-  //}
+  for (unsigned i = 0; i < 16; i++) {
+    for (unsigned j = 0; j < 16; j++) {
+      printf("%.1f\t", __half2float((h_a_tcu+256*383)[j+i*16]));
+    }
+    printf("\n");
+  }
   cudaFree(d_a_tcu);
   cudaFree(d_b_tcu);
   cudaFree(d_c_tcu);
