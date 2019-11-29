@@ -153,6 +153,46 @@ __global__ void mat_vec_mul(half *matrix, half *in_vect, half *out_vect, const u
   }
 }
 
+__global__ void mat_vec_mul(cuDoubleComplex *matrix, cuDoubleComplex *in_vect, cuDoubleComplex *out_vect, const unsigned matrix_count)
+{
+  const unsigned i = threadIdx.x + blockIdx.x*blockDim.x;
+  if (i < matrix_count) {
+
+    cuDoubleComplex vec0 = (in_vect+i*3)[0];
+    cuDoubleComplex vec1 = (in_vect+i*3)[1];
+    cuDoubleComplex vec2 = (in_vect+i*3)[2];
+
+    cuDoubleComplex mat00 = (matrix+i*9)[0];
+    cuDoubleComplex mat01 = (matrix+i*9)[1];
+    cuDoubleComplex mat02 = (matrix+i*9)[2];
+
+    cuDoubleComplex mat10 = (matrix+i*9)[3];
+    cuDoubleComplex mat11 = (matrix+i*9)[4];
+    cuDoubleComplex mat12 = (matrix+i*9)[5];
+
+    cuDoubleComplex mat20 = (matrix+i*9)[6];
+    cuDoubleComplex mat21 = (matrix+i*9)[7];
+    cuDoubleComplex mat22 = (matrix+i*9)[8];
+
+    //Multiply 3rd row by eta
+    //mat20 = make_cuDoubleComplex(cuCreal(mat20)*eta, cuCimag(mat20)*eta);
+    //mat21 = make_cuDoubleComplex(cuCreal(mat21)*eta, cuCimag(mat21)*eta);
+    //mat22 = make_cuDoubleComplex(cuCreal(mat22)*eta, cuCimag(mat22)*eta);
+
+    (out_vect+i*3)[0] = cuCadd( cuCadd( cuCmul( mat00, vec0 ),
+        cuCmul( mat01, vec1 )),
+        cuCmul( mat02, vec2 ));
+
+    (out_vect+i*3)[1] = cuCadd( cuCadd( cuCmul( mat10, vec0 ),
+        cuCmul( mat11, vec1 )),
+        cuCmul( mat12, vec2 ));
+
+    (out_vect+i*3)[2] = cuCadd( cuCadd( cuCmul( mat20, vec0 ),
+        cuCmul( mat21, vec1 )),
+        cuCmul( mat22, vec2 ));
+  }
+}
+
 __global__ void dot_wmma16x16(half *a, half *b, half *c, const unsigned matrix_count)
 {
   unsigned offset = (threadIdx.x + blockIdx.x * blockDim.x)/32; //32 -> warp for WMMA

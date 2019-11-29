@@ -4,10 +4,10 @@
 #include "wmma-common.h"
 #include "matrix-utility.h"
 
-#define TCU_MAT 1920
+#define TCU_MAT 5120
 #define RUN     10
 #define BLKSIZE 1024
-#define MAT_PER_BLOCK 160
+#define MAT_PER_BLOCK 512
 
 int main(int argc, char **argv)
 {
