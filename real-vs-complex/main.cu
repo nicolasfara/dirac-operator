@@ -154,7 +154,15 @@ int main(int argc, char **argv)
   fillZeroTCUMatrixHalf(h_b_tcu_c, TCU_MAT_C);
   fillZeroTCUMatrixHalf(h_c_tcu_c, TCU_MAT_C);
   fillTCUMatrixHalf(h_a_tcu_c, TCU_MAT_C);
-  fillTCUMatrixHalf(h_b_tcu_c, TCU_MAT_C);
+  fillTCUVectorHalf(h_b_tcu_c, TCU_MAT_C);
+
+  printf("Testing matrix: \n\n");
+  for (unsigned i = 0; i < 16; i++) {
+    for (unsigned j = 0; j < 16; j++) {
+      printf("%.1f\t", __half2float((h_a_tcu_c)[j+i*16]));
+    }
+    printf("\n");
+  }
 
   half *d_a_tcu_c;
   half *d_b_tcu_c;

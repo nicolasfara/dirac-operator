@@ -103,7 +103,6 @@ void fillTCUMatrixHalf(half *h_ptr, const unsigned matrix_count)
   }
 }
 
-
 void fillTCUVectorHalf(half *h_ptr, const unsigned matrix_count)
 {
   const unsigned lut[] = { 0, 4, 8, 12, 65, 69, 73, 78, 130, 134, 139, 143, 195, 199, 203, 207 };
