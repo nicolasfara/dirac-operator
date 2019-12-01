@@ -156,10 +156,17 @@ int main(int argc, char **argv)
   fillTCUMatrixHalf(h_a_tcu_c, TCU_MAT_C);
   fillTCUVectorHalf(h_b_tcu_c, TCU_MAT_C);
 
-  printf("Testing matrix: \n\n");
+  printf("Testing A matrix: \n\n");
   for (unsigned i = 0; i < 16; i++) {
     for (unsigned j = 0; j < 16; j++) {
       printf("%.1f\t", __half2float((h_a_tcu_c)[j+i*16]));
+    }
+    printf("\n");
+  }
+  printf("\n\nTesting B vector: \n\n");
+  for (unsigned i = 0; i < 16; i++) {
+    for (unsigned j = 0; j < 16; j++) {
+      printf("%.1f\t", __half2float((h_b_tcu_c)[j+i*16]));
     }
     printf("\n");
   }
@@ -191,6 +198,14 @@ int main(int argc, char **argv)
   printf("TCU complex Version: %fs\n", elapsed/RUN);
 
   copyDHTCUMatrixHalf(h_c_tcu_c, d_c_tcu_c, TCU_MAT_C);
+
+  printf("\n\nTesting C vector: \n\n");
+  for (unsigned i = 0; i < 16; i++) {
+    for (unsigned j = 0; j < 16; j++) {
+      printf("%.1f\t", __half2float((h_c_tcu_c)[j+i*16]));
+    }
+    printf("\n");
+  }
 
   cudaFree(d_a_tcu_c);
   cudaFree(d_b_tcu_c);
