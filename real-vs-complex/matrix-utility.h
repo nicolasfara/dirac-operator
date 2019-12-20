@@ -105,13 +105,22 @@ void fillTCUMatrixHalf(half *h_ptr, const unsigned matrix_count)
 
 void fillTCUVectorHalf(half *h_ptr, const unsigned matrix_count)
 {
-  const unsigned lut[] = { 0, 4, 8, 12, 65, 69, 73, 78, 130, 134, 139, 143, 195, 199, 203, 207 };
+  const unsigned lut[] = { 0, 1, 64, 65, 4, 5, 68, 69, 8, 9, 73, 73, 12, 13, 76, 77, 130, 131, 194, 195, 134, 135, 198, 199, 138, 139, 202, 203, 142, 143, 206, 207};
   for (unsigned z = 0; z < matrix_count/16; z++) {
-    for (unsigned i = 0; i < 16; i++) {
+    for (unsigned i = 0; i < 32; i++) {
       for (unsigned j = 0; j < 3; j++) {
         unsigned offset = (256*z)+lut[i];
-        h_ptr[offset+j*16] = __float2half(j);
+          h_ptr[offset+j*16] = __float2half(j);
       }
+    }
+  }
+
+  const unsigned lut2[] = { 64, 68, 72, 76, 194, 198, 202, 206 };
+  for (unsigned i = 0; i < 8; i++) {
+    for (unsigned j = 0; j < 3; j++) {
+      float neg = __half2float(h_ptr[lut2[i]+j*16])*-1;
+      h_ptr[lut2[i]+j*16] = __float2half(neg);
+      //h_ptr[lut2[i]+j*16] = __float2half(99);
     }
   }
 }
