@@ -276,17 +276,15 @@ void loadSu3FromFileNew(su3_soa * u, const char *filename){
     exit(-1);
   }
 
-
   fscanf(fp, "%d %d %d %d %d \n", &nx_l, &ny_l, &nz_l, &nt_l,&update_iterations);
 
   printf("Reading configuration file with header: \n");
   printf("nx_l: %d, ny_l: %d, nz_l: %d, nt_l: %d \n", nx_l, ny_l, nz_l, nt_l); 
   printf("update_iterations: %d \n", update_iterations);
- 
+
 //  while ( (i < no_links) && (!error) ) {
 
     while ( (i < sizeh*8) && (!error) ) {
-    
       j = i / sizeh;
       idx = i % sizeh;
 
@@ -328,7 +326,6 @@ void loadSu3FromFileNew(su3_soa * u, const char *filename){
         printf("Read error... ");
         error = 1;
       }
-    
     i++;
 
   }
