@@ -383,10 +383,16 @@ void writeFermionToFile(vec3_soa * fermion, const char *filename){
 
 // Mapper functions
 
-void Su3Mapper(su3_soa *in, half *out, size_t count)
+// La lettura dal file di input rivela che esistono 8 strutture su3_soa,
+// se quindi in fase di allocazione della mia struttura dati, alloco
+// un array di 8 elementi ognuno dei quali e' un puntatore (*half) alle matrici
+// "impacchettate" per l'uso con tensor core (?).
+// Se cio' fosse corretto, allora dovrei invocare questa funzione 8 volte e
+// passare come argomento l'elemento del vettore di puntatori (Vettore di 8 elemeti)
+void Su3Mapper(su3_soa *in, half *out)
 {
   const unsigned lut[] = { 0, 8, 64, 72, 128, 136, 192, 200 };
-  for (unsigned i=0; i<count; i++) {
+  for (unsigned i=0; i<sizeh; i++) {
     unsigned mat16_16 = i/16; //index of bigger matrix
     unsigned lindex = lut[i%8]; //local index for 3x3 matrix
     unsigned gindex = mat16_16*256 + lindex;
@@ -432,10 +438,10 @@ void Su3Mapper(su3_soa *in, half *out, size_t count)
 
 }
 
-void Su3MapperConj(su3_soa *in, half *out, size_t count)
+void Su3MapperConj(su3_soa *in, half *out)
 {
   const unsigned lut[] = { 0, 8, 64, 72, 128, 136, 192, 200 };
-  for (unsigned i=0; i<count; i++) {
+  for (unsigned i=0; i<sizeh; i++) {
     unsigned mat16_16 = i/16; //index of bigger matrix
     unsigned lindex = lut[i%8]; //local index for 3x3 matrix
     unsigned gindex = mat16_16*256 + lindex;
@@ -481,8 +487,34 @@ void Su3MapperConj(su3_soa *in, half *out, size_t count)
 
 }
 
-void fermionMapper(vec3 *in, half *out, size_t count)
+void fermionMapper(vec3_soa *in, half *out)
 {
+  const unsigned lut[] = { 0, 4, 8, 12, 130, 134, 138, 142 };
+
+  for (unsigned i=0; i < sizeh; i++) {
+    unsigned mat16_16 = i/16; //index of bigger matrix
+    unsigned lindex = lut[i%8]; //local index for 3x3 matrix
+    unsigned gindex = mat16_16*256 + lindex;
+
+    out[gindex + 0] = __float2half(cuCreal(in->c0[i]));
+    out[gindex + 1] = __float2half(cuCimag(in->c0[i]));
+    out[gindex + 16] = __float2half(cuCreal(in->c1[i]));
+    out[gindex + 17] = __float2half(cuCimag(in->c1[i]));
+    out[gindex + 32] = __float2half(cuCreal(in->c2[i]));
+    out[gindex + 33] = __float2half(cuCimag(in->c2[i]));
+    out[gindex + 48] = __float2half(0.0f);
+    out[gindex + 49] = __float2half(0.0f);
+
+
+    out[gindex + 64] = __float2half(-cuCimag(in->c0[i]));
+    out[gindex + 65] = __float2half(cuCreal(in->c0[i]));
+    out[gindex + 80] = __float2half(-cuCimag(in->c1[i]));
+    out[gindex + 81] = __float2half(cuCreal(in->c1[i]));
+    out[gindex + 96] = __float2half(-cuCimag(in->c2[i]));
+    out[gindex + 97] = __float2half(cuCreal(in->c2[i]));
+    out[gindex + 112] = __float2half(0.0f);
+    out[gindex + 113] = __float2half(0.0f);
+  }
 
 }
 
