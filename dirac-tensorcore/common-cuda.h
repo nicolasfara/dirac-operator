@@ -518,6 +518,35 @@ void fermionMapper(vec3_soa *in, half *out)
 
 }
 
+// Debug prupose
+void printMappedSu3_soa(half *in, su3_soa a)
+{
+  FILE *fp;
+  FILE *fpa;
+  if ((fp=fopen("su3_soa.log", "w")) == NULL) {
+    fprintf(stderr, "Unable to create su3_soa log file\n");
+  }
+
+  if ((fpa=fopen("su3_soa_fpa.log", "w")) == NULL) {
+    fprintf(stderr, "Unable to create su3_soa log file\n");
+  }
+
+  for (unsigned i=0; i<sizeh; i++) {
+    fprintf(fpa, "(%f %f)\t", cuCreal(a.r0.c0[i]), cuCimag(a.r0.c0[i]));
+    fprintf(fpa, "\n");
+  }
+
+  for (unsigned i=0; i < sizeh/8; i++) {
+    for (unsigned j=0; j < 256; j++) {
+      if (j % 16 == 0 && j != 0) fprintf(fp, "\n");
+      fprintf(fp, "%f\t", __half2float(in[i*256 + j]));
+    }
+    fprintf(fp, "\n\n");
+  }
+
+  fclose(fp);
+}
+
 
 
 
