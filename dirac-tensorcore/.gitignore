@@ -7,4 +7,5 @@
 *cudafe*
 *.fatbin*
 *.module_id
+*.log
 test-cuda-gpu
