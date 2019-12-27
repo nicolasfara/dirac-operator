@@ -369,8 +369,10 @@ if ((nx == 32) && (ny == 32) && (nz == 32) && (nt == 32)) {
   loadSu3FromFile( u_h, "TestConf_16_4.cnf");
   for (unsigned i=0; i<8; i++)
     Su3Mapper(u_h[i], u_ht[i]);
+  printf("Mapper Su3_soa\n");
   loadFermionFromFile(fermion1_h, "StartFermion_16_4.fer");
   fermionMapper(fermion1_h, fermion1_ht);
+  printf("fermion mapper\n");
 } else {
   fprintf(stdout, "Lattice not available... \n");
   exit(1);
@@ -418,8 +420,12 @@ if ((nx == 32) && (ny == 32) && (nz == 32) && (nt == 32)) {
   writeFermionToFile(fermion1_h, "EndFermion.fer");
 
   free(u_h);
+  for (unsigned i=0; i<8; i++)
+    free(u_ht[i]);
   free(fermion1_h);
+  free(fermion1_ht);
   free(fermion2_h);
+  free(fermion2_ht);
 
   return 0;
 
