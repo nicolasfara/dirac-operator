@@ -393,7 +393,7 @@ void Su3Mapper(su3_soa in, half *out)
 {
   const unsigned lut[] = { 0, 8, 64, 72, 128, 136, 192, 200 };
   for (unsigned i=0; i<sizeh; i++) {
-    unsigned mat16_16 = i/16; //index of bigger matrix
+    unsigned mat16_16 = i/8; //index of bigger matrix
     unsigned lindex = lut[i%8]; //local index for 3x3 matrix
     unsigned gindex = mat16_16*256 + lindex;
 
@@ -442,7 +442,7 @@ void Su3MapperConj(su3_soa in, half *out)
 {
   const unsigned lut[] = { 0, 8, 64, 72, 128, 136, 192, 200 };
   for (unsigned i=0; i<sizeh; i++) {
-    unsigned mat16_16 = i/16; //index of bigger matrix
+    unsigned mat16_16 = i/8; //index of bigger matrix
     unsigned lindex = lut[i%8]; //local index for 3x3 matrix
     unsigned gindex = mat16_16*256 + lindex;
 
@@ -492,7 +492,7 @@ void fermionMapper(vec3_soa *in, half *out)
   const unsigned lut[] = { 0, 4, 8, 12, 130, 134, 138, 142 };
 
   for (unsigned i=0; i < sizeh; i++) {
-    unsigned mat16_16 = i/16; //index of bigger matrix
+    unsigned mat16_16 = i/8; //index of bigger matrix
     unsigned lindex = lut[i%8]; //local index for 3x3 matrix
     unsigned gindex = mat16_16*256 + lindex;
 
