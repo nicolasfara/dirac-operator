@@ -1,7 +1,8 @@
 
 # Define Lattice size and cache blocking size:
 #LATTICE=-Dnx=16 -Dny=16 -Dnz=16 -Dnt=16 -DDIM_BLOCK_X=8 -DDIM_BLOCK_Y=8 -DDIM_BLOCK_Z=8 -DDIM_BLOCK_T=4
-LATTICE=-Dnx=32 -Dny=32 -Dnz=32 -Dnt=32 -DDIM_BLOCK_X=8 -DDIM_BLOCK_Y=8 -DDIM_BLOCK_Z=8 -DDIM_BLOCK_T=4
+#LATTICE=-Dnx=32 -Dny=32 -Dnz=32 -Dnt=32 -DDIM_BLOCK_X=8 -DDIM_BLOCK_Y=8 -DDIM_BLOCK_Z=8 -DDIM_BLOCK_T=4
+LATTICE=-Dnx=16 -Dny=16 -Dnz=16 -Dnt=16 -DDIM_BLOCK_X=8 -DDIM_BLOCK_Y=8 -DDIM_BLOCK_Z=8 -DDIM_BLOCK_T=4
 
 ###############################################################################
 

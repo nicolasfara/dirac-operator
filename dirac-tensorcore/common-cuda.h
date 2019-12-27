@@ -389,7 +389,7 @@ void writeFermionToFile(vec3_soa * fermion, const char *filename){
 // "impacchettate" per l'uso con tensor core (?).
 // Se cio' fosse corretto, allora dovrei invocare questa funzione 8 volte e
 // passare come argomento l'elemento del vettore di puntatori (Vettore di 8 elemeti)
-void Su3Mapper(su3_soa *in, half *out)
+void Su3Mapper(su3_soa in, half *out)
 {
   const unsigned lut[] = { 0, 8, 64, 72, 128, 136, 192, 200 };
   for (unsigned i=0; i<sizeh; i++) {
@@ -397,31 +397,31 @@ void Su3Mapper(su3_soa *in, half *out)
     unsigned lindex = lut[i%8]; //local index for 3x3 matrix
     unsigned gindex = mat16_16*256 + lindex;
 
-    out[gindex + 0] = __float2half(cuCreal(in->r0.c0[i]));
-    out[gindex + 4] = __float2half(cuCimag(in->r0.c0[i]));
-    out[gindex + 1] = __float2half(cuCreal(in->r0.c1[i]));
-    out[gindex + 5] = __float2half(cuCimag(in->r0.c1[i]));
-    out[gindex + 2] = __float2half(cuCreal(in->r0.c2[i]));
-    out[gindex + 6] = __float2half(cuCimag(in->r0.c2[i]));
+    out[gindex + 0] = __float2half(cuCreal(in.r0.c0[i]));
+    out[gindex + 4] = __float2half(cuCimag(in.r0.c0[i]));
+    out[gindex + 1] = __float2half(cuCreal(in.r0.c1[i]));
+    out[gindex + 5] = __float2half(cuCimag(in.r0.c1[i]));
+    out[gindex + 2] = __float2half(cuCreal(in.r0.c2[i]));
+    out[gindex + 6] = __float2half(cuCimag(in.r0.c2[i]));
     out[gindex + 3] = __float2half(0.0f);
     out[gindex + 7] = __float2half(0.0f);
 
-    out[gindex + 16] = __float2half(cuCreal(in->r1.c0[i]));
-    out[gindex + 20] = __float2half(cuCimag(in->r1.c0[i]));
-    out[gindex + 17] = __float2half(cuCreal(in->r1.c1[i]));
-    out[gindex + 21] = __float2half(cuCimag(in->r1.c1[i]));
-    out[gindex + 18] = __float2half(cuCreal(in->r1.c2[i]));
-    out[gindex + 22] = __float2half(cuCimag(in->r1.c2[i]));
+    out[gindex + 16] = __float2half(cuCreal(in.r1.c0[i]));
+    out[gindex + 20] = __float2half(cuCimag(in.r1.c0[i]));
+    out[gindex + 17] = __float2half(cuCreal(in.r1.c1[i]));
+    out[gindex + 21] = __float2half(cuCimag(in.r1.c1[i]));
+    out[gindex + 18] = __float2half(cuCreal(in.r1.c2[i]));
+    out[gindex + 22] = __float2half(cuCimag(in.r1.c2[i]));
     out[gindex + 19] = __float2half(0.0f);
     out[gindex + 23] = __float2half(0.0f);
 
 #ifdef ALLOCROW3
-    out[gindex + 32] = __float2half(cuCreal(in->r2.c0[i]));
-    out[gindex + 36] = __float2half(cuCimag(in->r2.c0[i]));
-    out[gindex + 33] = __float2half(cuCreal(in->r2.c1[i]));
-    out[gindex + 37] = __float2half(cuCimag(in->r2.c1[i]));
-    out[gindex + 34] = __float2half(cuCreal(in->r2.c2[i]));
-    out[gindex + 38] = __float2half(cuCimag(in->r2.c2[i]));
+    out[gindex + 32] = __float2half(cuCreal(in.r2.c0[i]));
+    out[gindex + 36] = __float2half(cuCimag(in.r2.c0[i]));
+    out[gindex + 33] = __float2half(cuCreal(in.r2.c1[i]));
+    out[gindex + 37] = __float2half(cuCimag(in.r2.c1[i]));
+    out[gindex + 34] = __float2half(cuCreal(in.r2.c2[i]));
+    out[gindex + 38] = __float2half(cuCimag(in.r2.c2[i]));
     out[gindex + 35] = __float2half(0.0f);
     out[gindex + 39] = __float2half(0.0f);
 #endif
@@ -438,7 +438,7 @@ void Su3Mapper(su3_soa *in, half *out)
 
 }
 
-void Su3MapperConj(su3_soa *in, half *out)
+void Su3MapperConj(su3_soa in, half *out)
 {
   const unsigned lut[] = { 0, 8, 64, 72, 128, 136, 192, 200 };
   for (unsigned i=0; i<sizeh; i++) {
@@ -446,31 +446,31 @@ void Su3MapperConj(su3_soa *in, half *out)
     unsigned lindex = lut[i%8]; //local index for 3x3 matrix
     unsigned gindex = mat16_16*256 + lindex;
 
-    out[gindex + 0] = __float2half(cuCreal(in->r0.c0[i]));
-    out[gindex + 4] = __float2half(-cuCimag(in->r0.c0[i]));
-    out[gindex + 1] = __float2half(cuCreal(in->r0.c1[i]));
-    out[gindex + 5] = __float2half(-cuCimag(in->r0.c1[i]));
-    out[gindex + 2] = __float2half(cuCreal(in->r0.c2[i]));
-    out[gindex + 6] = __float2half(-cuCimag(in->r0.c2[i]));
+    out[gindex + 0] = __float2half(cuCreal(in.r0.c0[i]));
+    out[gindex + 4] = __float2half(-cuCimag(in.r0.c0[i]));
+    out[gindex + 1] = __float2half(cuCreal(in.r0.c1[i]));
+    out[gindex + 5] = __float2half(-cuCimag(in.r0.c1[i]));
+    out[gindex + 2] = __float2half(cuCreal(in.r0.c2[i]));
+    out[gindex + 6] = __float2half(-cuCimag(in.r0.c2[i]));
     out[gindex + 3] = __float2half(0.0f);
     out[gindex + 7] = __float2half(0.0f);
 
-    out[gindex + 16] = __float2half(cuCreal(in->r1.c0[i]));
-    out[gindex + 20] = __float2half(-cuCimag(in->r1.c0[i]));
-    out[gindex + 17] = __float2half(cuCreal(in->r1.c1[i]));
-    out[gindex + 21] = __float2half(-cuCimag(in->r1.c1[i]));
-    out[gindex + 18] = __float2half(cuCreal(in->r1.c2[i]));
-    out[gindex + 22] = __float2half(-cuCimag(in->r1.c2[i]));
+    out[gindex + 16] = __float2half(cuCreal(in.r1.c0[i]));
+    out[gindex + 20] = __float2half(-cuCimag(in.r1.c0[i]));
+    out[gindex + 17] = __float2half(cuCreal(in.r1.c1[i]));
+    out[gindex + 21] = __float2half(-cuCimag(in.r1.c1[i]));
+    out[gindex + 18] = __float2half(cuCreal(in.r1.c2[i]));
+    out[gindex + 22] = __float2half(-cuCimag(in.r1.c2[i]));
     out[gindex + 19] = __float2half(0.0f);
     out[gindex + 23] = __float2half(0.0f);
 
 #ifdef ALLOCROW3
-    out[gindex + 32] = __float2half(cuCreal(in->r2.c0[i]));
-    out[gindex + 36] = __float2half(-cuCimag(in->r2.c0[i]));
-    out[gindex + 33] = __float2half(cuCreal(in->r2.c1[i]));
-    out[gindex + 37] = __float2half(-cuCimag(in->r2.c1[i]));
-    out[gindex + 34] = __float2half(cuCreal(in->r2.c2[i]));
-    out[gindex + 38] = __float2half(-cuCimag(in->r2.c2[i]));
+    out[gindex + 32] = __float2half(cuCreal(in.r2.c0[i]));
+    out[gindex + 36] = __float2half(-cuCimag(in.r2.c0[i]));
+    out[gindex + 33] = __float2half(cuCreal(in.r2.c1[i]));
+    out[gindex + 37] = __float2half(-cuCimag(in.r2.c1[i]));
+    out[gindex + 34] = __float2half(cuCreal(in.r2.c2[i]));
+    out[gindex + 38] = __float2half(-cuCimag(in.r2.c2[i]));
     out[gindex + 35] = __float2half(0.0f);
     out[gindex + 39] = __float2half(0.0f);
 #endif

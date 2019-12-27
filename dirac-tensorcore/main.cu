@@ -321,28 +321,45 @@ int main() {
   }
 
   su3_soa * u_h;
+  half * u_ht[8];
   vec3_soa * fermion1_h;
+  half * fermion1_ht;
   vec3_soa * fermion2_h;
+  half * fermion2_ht;
 
   // 8 = number of directions times 2 (even/odd)
   // no_links = sizeh * 8
   posix_memalign((void **)&u_h,        ALIGN, 8*sizeof(su3_soa));
+  for (unsigned i=0; i<8; i++)
+    posix_memalign((void **)&u_ht[i],       ALIGN, (sizeh/8)*256*sizeof(half));
   posix_memalign((void **)&fermion1_h, ALIGN, sizeof(vec3_soa));
+  posix_memalign((void **)&fermion1_ht,ALIGN, (sizeh/8)*256*sizeof(half) );
   posix_memalign((void **)&fermion2_h, ALIGN, sizeof(vec3_soa));
+  posix_memalign((void **)&fermion2_ht,ALIGN, (sizeh/8)*256*sizeof(half));
 
 //  printf("Sizeof su3_soa   is: %d \n", sizeof(su3_soa));
 //  printf("Sizeof su3_soa_d is: %d \n", sizeof(su3_soa_d));
 
   su3_soa * u_d;
+  half * u_dt[8];
   vec3_soa * fermion1_d;
+  half * fermion1_dt;
   vec3_soa * fermion2_d;
+  half * fermion2_dt;
 
   cudaMalloc ((void**)&u_d, 8*sizeof(su3_soa));
   checkCUDAError("Allocating u_d");
+  for (unsigned i=0; i < 8; i++)
+    cudaMalloc ((void**)&u_dt[i], (sizeh/8)*256*sizeof(half));
+  checkCUDAError("Allocating u_dt");
   cudaMalloc ((void**)&fermion1_d, sizeof(vec3_soa));
   checkCUDAError("Allocating fermion1_d");
+  cudaMalloc ((void**)&fermion1_dt, (sizeh/8)*256*sizeof(half));
+  checkCUDAError("Allocating fermion1_dt");
   cudaMalloc ((void**)&fermion2_d, sizeof(vec3_soa));
   checkCUDAError("Allocating fermion2_d");
+  cudaMalloc ((void**)&fermion2_dt, (sizeh/8)*256*sizeof(half));
+  checkCUDAError("Allocating fermion2_dt");
 
 
 if ((nx == 32) && (ny == 32) && (nz == 32) && (nt == 32)) {
@@ -350,7 +367,10 @@ if ((nx == 32) && (ny == 32) && (nz == 32) && (nt == 32)) {
   loadFermionFromFileNew(fermion1_h, "test_fermion_32_4");
 } else if ((nx == 16) && (ny == 16) && (nz == 16) && (nt == 16)) {
   loadSu3FromFile( u_h, "TestConf_16_4.cnf");
+  for (unsigned i=0; i<8; i++)
+    Su3Mapper(u_h[i], u_ht[i]);
   loadFermionFromFile(fermion1_h, "StartFermion_16_4.fer");
+  fermionMapper(fermion1_h, fermion1_ht);
 } else {
   fprintf(stdout, "Lattice not available... \n");
   exit(1);
