@@ -379,6 +379,7 @@ if ((nx == 32) && (ny == 32) && (nz == 32) && (nt == 32)) {
 }
 
   printMappedSu3_soa(u_ht[0], u_h[0]);
+  printMappedVec3_soa(fermion1_ht, *fermion1_h);
 
   cudaMemcpy( u_d, u_h, 8*sizeof(su3_soa), cudaMemcpyHostToDevice );
   checkCUDAError("Copying u_d to device");
