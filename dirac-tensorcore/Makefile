@@ -1,8 +1,7 @@
 
 # Define Lattice size and cache blocking size:
-#LATTICE=-Dnx=16 -Dny=16 -Dnz=16 -Dnt=16 -DDIM_BLOCK_X=8 -DDIM_BLOCK_Y=8 -DDIM_BLOCK_Z=8 -DDIM_BLOCK_T=4
-#LATTICE=-Dnx=32 -Dny=32 -Dnz=32 -Dnt=32 -DDIM_BLOCK_X=8 -DDIM_BLOCK_Y=8 -DDIM_BLOCK_Z=8 -DDIM_BLOCK_T=4
 LATTICE=-Dnx=16 -Dny=16 -Dnz=16 -Dnt=16 -DDIM_BLOCK_X=8 -DDIM_BLOCK_Y=8 -DDIM_BLOCK_Z=8 -DDIM_BLOCK_T=4
+#LATTICE=-Dnx=32 -Dny=32 -Dnz=32 -Dnt=32 -DDIM_BLOCK_X=8 -DDIM_BLOCK_Y=8 -DDIM_BLOCK_Z=8 -DDIM_BLOCK_T=4
 
 ###############################################################################
 
@@ -13,6 +12,7 @@ CC=nvcc
 
 # V100
 CC_CFLAGS=-O3 --ptxas-options=-v -lineinfo -gencode arch=compute_70,code=sm_70 -keep
+CC_CFLAGS_1050=-O3 --ptxas-options=-v -lineinfo -gencode arch=compute_61,code=sm_61 -keep
 
 ###############################################################################
 
@@ -26,8 +26,12 @@ all: cuda
 cuda: common-cuda.h
 	nvcc $(LATTICE) $(CC_CFLAGS) main.cu -o test-cuda-gpu
 
+
+1050: common-cuda.h
+	nvcc $(LATTICE) $(CC_CFLAGS_1050) main.cu -o test-cuda-gpu
+
 # CLEAN
 
 clean: 
-	rm -rf *.o 
+	rm -rf *.o *dlink* *.ii *.cubin *.gpu *.ptx *cudafe* *.fatbin* *.module_id test-cuda-gpu
 
