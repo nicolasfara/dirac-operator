@@ -51,6 +51,40 @@
 
 #define ALIGN 128
 
+// Define for tensor core
+#define L_ROW0  0
+#define L_ROW1  1
+#define L_ROW2  2
+#define L_ROW3  3
+#define L_ROW4  4
+#define L_ROW5  5
+#define L_ROW6  6
+#define L_ROW7  7
+#define L_COL0  0
+#define L_COL1  1
+#define L_COL2  2
+#define L_COL3  3
+
+static inline unsigned int IDX_REAL_MAT(unsigned rows, unsigned cols)
+{
+  return cols + rows*16;
+}
+
+static inline unsigned int IDX_IMAG_MAT(unsigned rows, unsigned cols)
+{
+  return cols + rows*16 + 4;
+}
+
+static inline unsigned int IDX_REAL_VEC(unsigned rows)
+{
+  return rows*16;
+}
+
+static inline unsigned int IDX_IMAG_VEC(unsigned rows)
+{
+  return rows*16 + 1;
+}
+
 
 typedef cuDoubleComplex d_complex;
 
@@ -397,43 +431,43 @@ void Su3Mapper(su3_soa in, half *out)
     unsigned lindex = lut[i%8]; //local index for 3x3 matrix
     unsigned gindex = mat16_16*256 + lindex;
 
-    out[gindex + 0] = __float2half(cuCreal(in.r0.c0[i]));
-    out[gindex + 4] = __float2half(cuCimag(in.r0.c0[i]));
-    out[gindex + 1] = __float2half(cuCreal(in.r0.c1[i]));
-    out[gindex + 5] = __float2half(cuCimag(in.r0.c1[i]));
-    out[gindex + 2] = __float2half(cuCreal(in.r0.c2[i]));
-    out[gindex + 6] = __float2half(cuCimag(in.r0.c2[i]));
-    out[gindex + 3] = __float2half(0.0f);
-    out[gindex + 7] = __float2half(0.0f);
+    out[gindex + IDX_REAL_MAT(L_ROW0, L_COL0)] = __float2half(cuCreal(in.r0.c0[i]));
+    out[gindex + IDX_IMAG_MAT(L_ROW0, L_COL0)] = __float2half(cuCimag(in.r0.c0[i]));
+    out[gindex + IDX_REAL_MAT(L_ROW0, L_COL1)] = __float2half(cuCreal(in.r0.c1[i]));
+    out[gindex + IDX_IMAG_MAT(L_ROW0, L_COL1)] = __float2half(cuCimag(in.r0.c1[i]));
+    out[gindex + IDX_REAL_MAT(L_ROW0, L_COL2)] = __float2half(cuCreal(in.r0.c2[i]));
+    out[gindex + IDX_IMAG_MAT(L_ROW0, L_COL2)] = __float2half(cuCimag(in.r0.c2[i]));
+    out[gindex + IDX_REAL_MAT(L_ROW0, L_COL3)] = __float2half(0.0f);
+    out[gindex + IDX_IMAG_MAT(L_ROW0, L_COL3)] = __float2half(0.0f);
 
-    out[gindex + 16] = __float2half(cuCreal(in.r1.c0[i]));
-    out[gindex + 20] = __float2half(cuCimag(in.r1.c0[i]));
-    out[gindex + 17] = __float2half(cuCreal(in.r1.c1[i]));
-    out[gindex + 21] = __float2half(cuCimag(in.r1.c1[i]));
-    out[gindex + 18] = __float2half(cuCreal(in.r1.c2[i]));
-    out[gindex + 22] = __float2half(cuCimag(in.r1.c2[i]));
-    out[gindex + 19] = __float2half(0.0f);
-    out[gindex + 23] = __float2half(0.0f);
+    out[gindex + IDX_REAL_MAT(L_ROW1, L_COL0)] = __float2half(cuCreal(in.r1.c0[i]));
+    out[gindex + IDX_IMAG_MAT(L_ROW1, L_COL0)] = __float2half(cuCimag(in.r1.c0[i]));
+    out[gindex + IDX_REAL_MAT(L_ROW1, L_COL1)] = __float2half(cuCreal(in.r1.c1[i]));
+    out[gindex + IDX_IMAG_MAT(L_ROW1, L_COL1)] = __float2half(cuCimag(in.r1.c1[i]));
+    out[gindex + IDX_REAL_MAT(L_ROW1, L_COL2)] = __float2half(cuCreal(in.r1.c2[i]));
+    out[gindex + IDX_IMAG_MAT(L_ROW1, L_COL2)] = __float2half(cuCimag(in.r1.c2[i]));
+    out[gindex + IDX_REAL_MAT(L_ROW1, L_COL3)] = __float2half(0.0f);
+    out[gindex + IDX_IMAG_MAT(L_ROW1, L_COL3)] = __float2half(0.0f);
 
 #ifdef ALLOCROW3
-    out[gindex + 32] = __float2half(cuCreal(in.r2.c0[i]));
-    out[gindex + 36] = __float2half(cuCimag(in.r2.c0[i]));
-    out[gindex + 33] = __float2half(cuCreal(in.r2.c1[i]));
-    out[gindex + 37] = __float2half(cuCimag(in.r2.c1[i]));
-    out[gindex + 34] = __float2half(cuCreal(in.r2.c2[i]));
-    out[gindex + 38] = __float2half(cuCimag(in.r2.c2[i]));
-    out[gindex + 35] = __float2half(0.0f);
-    out[gindex + 39] = __float2half(0.0f);
+    out[gindex + IDX_REAL_MAT(L_ROW2, L_COL0)] = __float2half(cuCreal(in.r2.c0[i]));
+    out[gindex + IDX_IMAG_MAT(L_ROW2, L_COL0)] = __float2half(cuCimag(in.r2.c0[i]));
+    out[gindex + IDX_REAL_MAT(L_ROW2, L_COL1)] = __float2half(cuCreal(in.r2.c1[i]));
+    out[gindex + IDX_IMAG_MAT(L_ROW2, L_COL1)] = __float2half(cuCimag(in.r2.c1[i]));
+    out[gindex + IDX_REAL_MAT(L_ROW2, L_COL2)] = __float2half(cuCreal(in.r2.c2[i]));
+    out[gindex + IDX_IMAG_MAT(L_ROW2, L_COL2)] = __float2half(cuCimag(in.r2.c2[i]));
+    out[gindex + IDX_REAL_MAT(L_ROW2, L_COL3)] = __float2half(0.0f);
+    out[gindex + IDX_IMAG_MAT(L_ROW2, L_COL3)] = __float2half(0.0f);
 #endif
 
-    out[gindex + 48] = __float2half(0.0f);
-    out[gindex + 49] = __float2half(0.0f);
-    out[gindex + 50] = __float2half(0.0f);
-    out[gindex + 51] = __float2half(0.0f);
-    out[gindex + 52] = __float2half(0.0f);
-    out[gindex + 53] = __float2half(0.0f);
-    out[gindex + 54] = __float2half(0.0f);
-    out[gindex + 55] = __float2half(0.0f);
+    out[gindex + IDX_REAL_MAT(L_ROW3, L_COL0)] = __float2half(0.0f);
+    out[gindex + IDX_IMAG_MAT(L_ROW3, L_COL0)] = __float2half(0.0f);
+    out[gindex + IDX_REAL_MAT(L_ROW3, L_COL1)] = __float2half(0.0f);
+    out[gindex + IDX_IMAG_MAT(L_ROW3, L_COL1)] = __float2half(0.0f);
+    out[gindex + IDX_REAL_MAT(L_ROW3, L_COL2)] = __float2half(0.0f);
+    out[gindex + IDX_IMAG_MAT(L_ROW3, L_COL2)] = __float2half(0.0f);
+    out[gindex + IDX_REAL_MAT(L_ROW3, L_COL3)] = __float2half(0.0f);
+    out[gindex + IDX_IMAG_MAT(L_ROW3, L_COL3)] = __float2half(0.0f);
   }
 
 }
@@ -446,43 +480,43 @@ void Su3MapperConj(su3_soa in, half *out)
     unsigned lindex = lut[i%8]; //local index for 3x3 matrix
     unsigned gindex = mat16_16*256 + lindex;
 
-    out[gindex + 0] = __float2half(cuCreal(in.r0.c0[i]));
-    out[gindex + 4] = __float2half(-cuCimag(in.r0.c0[i]));
-    out[gindex + 1] = __float2half(cuCreal(in.r0.c1[i]));
-    out[gindex + 5] = __float2half(-cuCimag(in.r0.c1[i]));
-    out[gindex + 2] = __float2half(cuCreal(in.r0.c2[i]));
-    out[gindex + 6] = __float2half(-cuCimag(in.r0.c2[i]));
-    out[gindex + 3] = __float2half(0.0f);
-    out[gindex + 7] = __float2half(0.0f);
+    out[gindex + IDX_REAL_MAT(L_ROW0, L_COL0)] = __float2half(cuCreal(in.r0.c0[i]));
+    out[gindex + IDX_IMAG_MAT(L_ROW0, L_COL0)] = __float2half(-cuCimag(in.r0.c0[i]));
+    out[gindex + IDX_REAL_MAT(L_ROW0, L_COL1)] = __float2half(cuCreal(in.r0.c1[i]));
+    out[gindex + IDX_IMAG_MAT(L_ROW0, L_COL1)] = __float2half(-cuCimag(in.r0.c1[i]));
+    out[gindex + IDX_REAL_MAT(L_ROW0, L_COL2)] = __float2half(cuCreal(in.r0.c2[i]));
+    out[gindex + IDX_IMAG_MAT(L_ROW0, L_COL2)] = __float2half(-cuCimag(in.r0.c2[i]));
+    out[gindex + IDX_REAL_MAT(L_ROW0, L_COL3)] = __float2half(0.0f);
+    out[gindex + IDX_IMAG_MAT(L_ROW0, L_COL3)] = __float2half(0.0f);
 
-    out[gindex + 16] = __float2half(cuCreal(in.r1.c0[i]));
-    out[gindex + 20] = __float2half(-cuCimag(in.r1.c0[i]));
-    out[gindex + 17] = __float2half(cuCreal(in.r1.c1[i]));
-    out[gindex + 21] = __float2half(-cuCimag(in.r1.c1[i]));
-    out[gindex + 18] = __float2half(cuCreal(in.r1.c2[i]));
-    out[gindex + 22] = __float2half(-cuCimag(in.r1.c2[i]));
-    out[gindex + 19] = __float2half(0.0f);
-    out[gindex + 23] = __float2half(0.0f);
+    out[gindex + IDX_REAL_MAT(L_ROW1, L_COL0)] = __float2half(cuCreal(in.r1.c0[i]));
+    out[gindex + IDX_IMAG_MAT(L_ROW1, L_COL0)] = __float2half(-cuCimag(in.r1.c0[i]));
+    out[gindex + IDX_REAL_MAT(L_ROW1, L_COL1)] = __float2half(cuCreal(in.r1.c1[i]));
+    out[gindex + IDX_IMAG_MAT(L_ROW1, L_COL1)] = __float2half(-cuCimag(in.r1.c1[i]));
+    out[gindex + IDX_REAL_MAT(L_ROW1, L_COL2)] = __float2half(cuCreal(in.r1.c2[i]));
+    out[gindex + IDX_IMAG_MAT(L_ROW1, L_COL2)] = __float2half(-cuCimag(in.r1.c2[i]));
+    out[gindex + IDX_REAL_MAT(L_ROW1, L_COL3)] = __float2half(0.0f);
+    out[gindex + IDX_IMAG_MAT(L_ROW1, L_COL3)] = __float2half(0.0f);
 
 #ifdef ALLOCROW3
-    out[gindex + 32] = __float2half(cuCreal(in.r2.c0[i]));
-    out[gindex + 36] = __float2half(-cuCimag(in.r2.c0[i]));
-    out[gindex + 33] = __float2half(cuCreal(in.r2.c1[i]));
-    out[gindex + 37] = __float2half(-cuCimag(in.r2.c1[i]));
-    out[gindex + 34] = __float2half(cuCreal(in.r2.c2[i]));
-    out[gindex + 38] = __float2half(-cuCimag(in.r2.c2[i]));
-    out[gindex + 35] = __float2half(0.0f);
-    out[gindex + 39] = __float2half(0.0f);
+    out[gindex + IDX_REAL_MAT(L_ROW2, L_COL0)] = __float2half(cuCreal(in.r2.c0[i]));
+    out[gindex + IDX_IMAG_MAT(L_ROW2, L_COL0)] = __float2half(-cuCimag(in.r2.c0[i]));
+    out[gindex + IDX_REAL_MAT(L_ROW2, L_COL1)] = __float2half(cuCreal(in.r2.c1[i]));
+    out[gindex + IDX_IMAG_MAT(L_ROW2, L_COL1)] = __float2half(-cuCimag(in.r2.c1[i]));
+    out[gindex + IDX_REAL_MAT(L_ROW2, L_COL2)] = __float2half(cuCreal(in.r2.c2[i]));
+    out[gindex + IDX_IMAG_MAT(L_ROW2, L_COL2)] = __float2half(-cuCimag(in.r2.c2[i]));
+    out[gindex + IDX_REAL_MAT(L_ROW2, L_COL3)] = __float2half(0.0f);
+    out[gindex + IDX_IMAG_MAT(L_ROW2, L_COL3)] = __float2half(0.0f);
 #endif
 
-    out[gindex + 48] = __float2half(0.0f);
-    out[gindex + 49] = __float2half(0.0f);
-    out[gindex + 50] = __float2half(0.0f);
-    out[gindex + 51] = __float2half(0.0f);
-    out[gindex + 52] = __float2half(0.0f);
-    out[gindex + 53] = __float2half(0.0f);
-    out[gindex + 54] = __float2half(0.0f);
-    out[gindex + 55] = __float2half(0.0f);
+    out[gindex + IDX_REAL_MAT(L_ROW3, L_COL0)] = __float2half(0.0f);
+    out[gindex + IDX_IMAG_MAT(L_ROW3, L_COL0)] = __float2half(0.0f);
+    out[gindex + IDX_REAL_MAT(L_ROW3, L_COL1)] = __float2half(0.0f);
+    out[gindex + IDX_IMAG_MAT(L_ROW3, L_COL1)] = __float2half(0.0f);
+    out[gindex + IDX_REAL_MAT(L_ROW3, L_COL2)] = __float2half(0.0f);
+    out[gindex + IDX_IMAG_MAT(L_ROW3, L_COL2)] = __float2half(0.0f);
+    out[gindex + IDX_REAL_MAT(L_ROW3, L_COL3)] = __float2half(0.0f);
+    out[gindex + IDX_IMAG_MAT(L_ROW3, L_COL3)] = __float2half(0.0f);
   }
 
 }
@@ -496,24 +530,24 @@ void fermionMapper(vec3_soa *in, half *out)
     unsigned lindex = lut[i%8]; //local index for 3x3 matrix
     unsigned gindex = mat16_16*256 + lindex;
 
-    out[gindex + 0] = __float2half(cuCreal(in->c0[i]));
-    out[gindex + 1] = __float2half(cuCimag(in->c0[i]));
-    out[gindex + 16] = __float2half(cuCreal(in->c1[i]));
-    out[gindex + 17] = __float2half(cuCimag(in->c1[i]));
-    out[gindex + 32] = __float2half(cuCreal(in->c2[i]));
-    out[gindex + 33] = __float2half(cuCimag(in->c2[i]));
-    out[gindex + 48] = __float2half(0.0f);
-    out[gindex + 49] = __float2half(0.0f);
+    out[gindex + IDX_REAL_VEC(L_ROW0)] = __float2half(cuCreal(in->c0[i]));
+    out[gindex + IDX_IMAG_VEC(L_ROW0)] = __float2half(cuCimag(in->c0[i]));
+    out[gindex + IDX_REAL_VEC(L_ROW1)] = __float2half(cuCreal(in->c1[i]));
+    out[gindex + IDX_IMAG_VEC(L_ROW1)] = __float2half(cuCimag(in->c1[i]));
+    out[gindex + IDX_REAL_VEC(L_ROW2)] = __float2half(cuCreal(in->c2[i]));
+    out[gindex + IDX_IMAG_VEC(L_ROW2)] = __float2half(cuCimag(in->c2[i]));
+    out[gindex + IDX_REAL_VEC(L_ROW3)] = __float2half(0.0f);
+    out[gindex + IDX_IMAG_VEC(L_ROW3)] = __float2half(0.0f);
 
 
-    out[gindex + 64] = __float2half(-cuCimag(in->c0[i]));
-    out[gindex + 65] = __float2half(cuCreal(in->c0[i]));
-    out[gindex + 80] = __float2half(-cuCimag(in->c1[i]));
-    out[gindex + 81] = __float2half(cuCreal(in->c1[i]));
-    out[gindex + 96] = __float2half(-cuCimag(in->c2[i]));
-    out[gindex + 97] = __float2half(cuCreal(in->c2[i]));
-    out[gindex + 112] = __float2half(0.0f);
-    out[gindex + 113] = __float2half(0.0f);
+    out[gindex + IDX_REAL_VEC(L_ROW4)] = __float2half(-cuCimag(in->c0[i]));
+    out[gindex + IDX_IMAG_VEC(L_ROW4)] = __float2half(cuCreal(in->c0[i]));
+    out[gindex + IDX_REAL_VEC(L_ROW5)] = __float2half(-cuCimag(in->c1[i]));
+    out[gindex + IDX_IMAG_VEC(L_ROW5)] = __float2half(cuCreal(in->c1[i]));
+    out[gindex + IDX_REAL_VEC(L_ROW6)] = __float2half(-cuCimag(in->c2[i]));
+    out[gindex + IDX_IMAG_VEC(L_ROW6)] = __float2half(cuCreal(in->c2[i]));
+    out[gindex + IDX_REAL_VEC(L_ROW7)] = __float2half(0.0f);
+    out[gindex + IDX_IMAG_VEC(L_ROW7)] = __float2half(0.0f);
   }
 
 }
