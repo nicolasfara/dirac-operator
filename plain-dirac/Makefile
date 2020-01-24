@@ -18,7 +18,7 @@ CC_CFLAGS=-O3 --ptxas-options=-v -lineinfo -gencode arch=compute_61,code=sm_61 #
 
 ###############################################################################
 
-all: cuda
+all: cuda cuda-8
 
 ###############################################################################
 
@@ -26,10 +26,13 @@ all: cuda
 # NVIDIA CUDA COMPILER
 
 cuda: common-cuda.h
-	nvcc $(LATTICE) $(CC_CFLAGS) main.cu -o test-cuda-gpu
+	nvcc $(LATTICE) $(CC_CFLAGS) main.cu -o dirac-operator
+
+cuda-8: common-cuda.h
+	nvcc $(LATTICE) $(CC_CFLAGS) main-8.cu -o dirac-operator-8
 
 # CLEAN
 
 clean: 
-	rm -rf *.o *dlink* *.ii *.cubin *.gpu *.ptx *cudafe* *.fatbin* *.module_id test-cuda-gpu 
+	rm -rf *.o *dlink* *.ii *.cubin *.gpu *.ptx *cudafe* *.fatbin* *.module_id dirac-operator* EndFermion.fer
 
