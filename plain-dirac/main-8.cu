@@ -4,7 +4,7 @@
 
 #include "common-cuda.h"
 
-#define NUM 2
+#define NUM 8
 
 __host__ __device__ static __inline__ void mat_vec_mul( const __restrict su3_soa * const matrix,
                                                         const int idx_mat,
@@ -144,14 +144,16 @@ __global__ void Deo(const __restrict su3_soa * const u, __restrict vec3_soa * co
   t =   (blockIdx.z * blockDim.z + threadIdx.z) / nz;
   z =   (blockIdx.z * blockDim.z + threadIdx.z) % nz;
   y =   (blockIdx.y * blockDim.y + threadIdx.y);
-  x = 2*(blockIdx.x * blockDim.x + threadIdx.x) + ((y+z+t) & 0x1);
+  x = 2*(blockIdx.x * blockDim.x + threadIdx.x) + ((y+z+t) & 0x1); //dispari sommo 1
+  //x = 2*(blockIdx.x * blockDim.x + threadIdx.x); //dispari sommo 1
 
   // Each thread compute 8 mat_vec_mul for each coordinate.
-  x *= NUM;
+  //x *= NUM;
+  printf("x:%d y:%d, z:%d t:%d\tidx: %d\n", x, y, z, t, idxh);
 
   // Coordinate +1, if on the end of the boundary: xm = nx-1. (the same for other coordinate).
   for (unsigned i=0; i<NUM; i++) {
-    xm[i] = x+i -1;
+    xm[i] = x+i*2 -1;
     xm[i] = CHECK_PERIODIC_BOUNDARY_SUB(xm[i], nx);
   }
   ym = y-1;
@@ -163,7 +165,7 @@ __global__ void Deo(const __restrict su3_soa * const u, __restrict vec3_soa * co
 
   // Coordinate -1, if on the end of the boundary: xm = 0. (the same for other coordinate).
   for (unsigned i=0; i<NUM; i++) {
-    xp[i] = x+i +1;
+    xp[i] = x+i*2 +1;
     xp[i] *= CHECK_PERIODIC_BOUNDARY_ADD(xp[i], nx);
   }
   yp = y+1;
@@ -203,32 +205,32 @@ __global__ void Deo(const __restrict su3_soa * const u, __restrict vec3_soa * co
 
 //////////////////////////////////////////////////////////////////////////////////////////////
     
-  eta = 1;
-  for (unsigned i=0; i<NUM; i++) {
-    conjmat_vec_mul( &u[1], snum(xm[i],y,z,t), eta, in, snum(xm[i],y,z,t), &aux_tmp );
-    aux[i] = subResult(aux[i], aux_tmp);
-  }
-
-//  eta = 1 - ( 2*(x & 0x1) );
-  for (unsigned i=0; i<NUM; i++) {
-//    eta = ETA_UPDATE(x+i);
-    conjmat_vec_mul( &u[3], snum(x+i,ym,z,t), eta, in, snum(x+i,ym,z,t), &aux_tmp );
-    aux[i] = subResult(aux[i], aux_tmp);
-  }
-
-//  eta = 1 - ( 2*((x+y) & 0x1) );
-  for (unsigned i=0; i<NUM; i++) {
-//    eta = ETA_UPDATE(x+i+y+i);
-    conjmat_vec_mul( &u[5], snum(x+i,y,zm,t), eta, in, snum(x+i,y,zm,t), &aux_tmp );
-    aux[i] = subResult(aux[i], aux_tmp);
-  }
-
-//  eta = 1 - ( 2*((x+y+z) & 0x1) );
-  for (unsigned i=0; i<NUM; i++) {
-//    eta = ETA_UPDATE(x+i+y+i+z+i);
-    conjmat_vec_mul( &u[7], snum(x+i,y,z,tm), eta, in, snum(x+i,y,z,tm), &aux_tmp );
-    aux[i] = subResult(aux[i], aux_tmp);
-  }
+//  eta = 1;
+//  for (unsigned i=0; i<NUM; i++) {
+//    conjmat_vec_mul( &u[1], snum(xm[i],y,z,t), eta, in, snum(xm[i],y,z,t), &aux_tmp);
+//    aux[i] = subResult(aux[i], aux_tmp);
+//  }
+//
+////  eta = 1 - ( 2*(x & 0x1) );
+//  for (unsigned i=0; i<NUM; i++) {
+////    eta = ETA_UPDATE(x+i);
+//    conjmat_vec_mul( &u[3], snum(x+i,ym,z,t), eta, in, snum(x+i,ym,z,t), &aux_tmp );
+//    aux[i] = subResult(aux[i], aux_tmp);
+//  }
+//
+////  eta = 1 - ( 2*((x+y) & 0x1) );
+//  for (unsigned i=0; i<NUM; i++) {
+////    eta = ETA_UPDATE(x+i+y+i);
+//    conjmat_vec_mul( &u[5], snum(x+i,y,zm,t), eta, in, snum(x+i,y,zm,t), &aux_tmp );
+//    aux[i] = subResult(aux[i], aux_tmp);
+//  }
+//
+////  eta = 1 - ( 2*((x+y+z) & 0x1) );
+//  for (unsigned i=0; i<NUM; i++) {
+////    eta = ETA_UPDATE(x+i+y+i+z+i);
+//    conjmat_vec_mul( &u[7], snum(x+i,y,z,tm), eta, in, snum(x+i,y,z,tm), &aux_tmp );
+//    aux[i] = subResult(aux[i], aux_tmp);
+//  }
 
 //////////////////////////////////////////////////////////////////////////////////////////////
 
@@ -262,11 +264,11 @@ __global__ void Doe(const __restrict su3_soa * const u, __restrict vec3_soa * co
   x = 2*(blockIdx.x * blockDim.x + threadIdx.x) + ((y+z+t+1) & 0x1);
 
   // Each thread compute 8 mat_vec_mul for each coordinate.
-  x *= NUM;
+  //x *= NUM;
   
   // Coordinate +1, if on the end of the boundary: xm = nx-1. (the same for other coordinate).
   for (unsigned i=0; i<NUM; i++) {
-    xm[i] = x+i -1;
+    xm[i] = x+i*2 -1;
     xm[i] = CHECK_PERIODIC_BOUNDARY_SUB(xm[i], nx);
   }
   ym = y-1;
@@ -278,7 +280,7 @@ __global__ void Doe(const __restrict su3_soa * const u, __restrict vec3_soa * co
 
   // Coordinate -1, if on the end of the boundary: xm = 0. (the same for other coordinate).
   for (unsigned i=0; i<NUM; i++) {
-    xp[i] = x+i +1;
+    xp[i] = x+i*2 +1;
     xp[i] *= CHECK_PERIODIC_BOUNDARY_ADD(xp[i], nx);
   }
   yp = y+1;
@@ -318,32 +320,32 @@ __global__ void Doe(const __restrict su3_soa * const u, __restrict vec3_soa * co
 
 //////////////////////////////////////////////////////////////////////////////////////////////
   
-  eta = 1;
-  for (unsigned i=0; i<NUM; i++) {
-    conjmat_vec_mul( &u[0], snum(xm[i],y,z,t), eta, in, snum(xm[i],y,z,t), &aux_tmp );
-    aux[i] = subResult(aux[i], aux_tmp);
-  }
-
-//  eta = 1 - ( 2*(x & 0x1) ); // if (x % 2 = 0) eta = 1 else -1
-  for (unsigned i=0; i<NUM; i++) {
-//    eta = ETA_UPDATE(x+i);
-    conjmat_vec_mul( &u[2], snum(x+i,ym,z,t), eta, in, snum(x+i,ym,z,t), &aux_tmp );
-    aux[i] = subResult(aux[i], aux_tmp);
-  }
-
-//  eta = 1 - ( 2*((x+y) & 0x1) );
-  for (unsigned i=0; i<NUM; i++) {
-//    eta = ETA_UPDATE(x+i+y+i);
-    conjmat_vec_mul( &u[4], snum(x+i,y,zm,t), eta, in, snum(x+i,y,zm,t), &aux_tmp);
-    aux[i] = subResult(aux[i], aux_tmp);
-  }
-
-//  eta = 1 - ( 2*((x+y+z) & 0x1) );
-  for (unsigned i=0; i<NUM; i++) {
-//    eta = ETA_UPDATE(x+i+y+i+z+i);
-    conjmat_vec_mul( &u[6], snum(x+i,y,z,tm), eta, in, snum(x+i,y,z,tm), &aux_tmp );
-    aux[i] = subResult(aux[i], aux_tmp);
-  }
+//  eta = 1;
+//  for (unsigned i=0; i<NUM; i++) {
+//    conjmat_vec_mul( &u[0], snum(xm[i],y,z,t), eta, in, snum(xm[i],y,z,t), &aux_tmp );
+//    aux[i] = subResult(aux[i], aux_tmp);
+//  }
+//
+////  eta = 1 - ( 2*(x & 0x1) ); // if (x % 2 = 0) eta = 1 else -1
+//  for (unsigned i=0; i<NUM; i++) {
+////    eta = ETA_UPDATE(x+i);
+//    conjmat_vec_mul( &u[2], snum(x+i,ym,z,t), eta, in, snum(x+i,ym,z,t), &aux_tmp );
+//    aux[i] = subResult(aux[i], aux_tmp);
+//  }
+//
+////  eta = 1 - ( 2*((x+y) & 0x1) );
+//  for (unsigned i=0; i<NUM; i++) {
+////    eta = ETA_UPDATE(x+i+y+i);
+//    conjmat_vec_mul( &u[4], snum(x+i,y,zm,t), eta, in, snum(x+i,y,zm,t), &aux_tmp);
+//    aux[i] = subResult(aux[i], aux_tmp);
+//  }
+//
+////  eta = 1 - ( 2*((x+y+z) & 0x1) );
+//  for (unsigned i=0; i<NUM; i++) {
+////    eta = ETA_UPDATE(x+i+y+i+z+i);
+//    conjmat_vec_mul( &u[6], snum(x+i,y,z,tm), eta, in, snum(x+i,y,z,tm), &aux_tmp );
+//    aux[i] = subResult(aux[i], aux_tmp);
+//  }
 
 //////////////////////////////////////////////////////////////////////////////////////////////
 
@@ -361,8 +363,10 @@ int main() {
   struct timeval t0, t1;
   double dt_tot = 0.0;
 
+  //dim3 dimBlockK1 (DIM_BLOCK_X, DIM_BLOCK_Y, DIM_BLOCK_Z);
+  //dim3 dimGridK1  ((nx/2)/DIM_BLOCK_X, ny/(DIM_BLOCK_Y), (nz*nt)/(DIM_BLOCK_Z) );
   dim3 dimBlockK1 (DIM_BLOCK_X/NUM, DIM_BLOCK_Y, DIM_BLOCK_Z);
-  dim3 dimGridK1  ((nx/2)/(DIM_BLOCK_X/NUM), ny/(DIM_BLOCK_Y), (nz*nt)/(DIM_BLOCK_Z) );
+  dim3 dimGridK1  ( (nx/2)/DIM_BLOCK_X, ny/(DIM_BLOCK_Y), (nz*nt)/(DIM_BLOCK_Z) );
 
   if ( ((nx % 2) != 0) || (((nx/2) % DIM_BLOCK_X) != 0) ) {
     fprintf(stderr, "ERROR: nx should be even and nx/2 should be divisible by DIM_BLOCK_X.");
