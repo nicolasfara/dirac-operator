@@ -205,32 +205,32 @@ __global__ void Deo(const __restrict su3_soa * const u, __restrict vec3_soa * co
 
 //////////////////////////////////////////////////////////////////////////////////////////////
     
-//  eta = 1;
-//  for (unsigned i=0; i<NUM; i++) {
-//    conjmat_vec_mul( &u[1], snum(xm[i],y,z,t), eta, in, snum(xm[i],y,z,t), &aux_tmp);
-//    aux[i] = subResult(aux[i], aux_tmp);
-//  }
-//
-////  eta = 1 - ( 2*(x & 0x1) );
-//  for (unsigned i=0; i<NUM; i++) {
-////    eta = ETA_UPDATE(x+i);
-//    conjmat_vec_mul( &u[3], snum(x+i,ym,z,t), eta, in, snum(x+i,ym,z,t), &aux_tmp );
-//    aux[i] = subResult(aux[i], aux_tmp);
-//  }
-//
-////  eta = 1 - ( 2*((x+y) & 0x1) );
-//  for (unsigned i=0; i<NUM; i++) {
-////    eta = ETA_UPDATE(x+i+y+i);
-//    conjmat_vec_mul( &u[5], snum(x+i,y,zm,t), eta, in, snum(x+i,y,zm,t), &aux_tmp );
-//    aux[i] = subResult(aux[i], aux_tmp);
-//  }
-//
-////  eta = 1 - ( 2*((x+y+z) & 0x1) );
-//  for (unsigned i=0; i<NUM; i++) {
-////    eta = ETA_UPDATE(x+i+y+i+z+i);
-//    conjmat_vec_mul( &u[7], snum(x+i,y,z,tm), eta, in, snum(x+i,y,z,tm), &aux_tmp );
-//    aux[i] = subResult(aux[i], aux_tmp);
-//  }
+  eta = 1;
+  for (unsigned i=0; i<NUM; i++) {
+    conjmat_vec_mul( &u[1], snum(xm[i],y,z,t), eta, in, snum(xm[i],y,z,t), &aux_tmp);
+    aux[i] = subResult(aux[i], aux_tmp);
+  }
+
+//  eta = 1 - ( 2*(x & 0x1) );
+  for (unsigned i=0; i<NUM; i++) {
+//    eta = ETA_UPDATE(x+i);
+    conjmat_vec_mul( &u[3], snum(x+i,ym,z,t), eta, in, snum(x+i,ym,z,t), &aux_tmp );
+    aux[i] = subResult(aux[i], aux_tmp);
+  }
+
+//  eta = 1 - ( 2*((x+y) & 0x1) );
+  for (unsigned i=0; i<NUM; i++) {
+//    eta = ETA_UPDATE(x+i+y+i);
+    conjmat_vec_mul( &u[5], snum(x+i,y,zm,t), eta, in, snum(x+i,y,zm,t), &aux_tmp );
+    aux[i] = subResult(aux[i], aux_tmp);
+  }
+
+//  eta = 1 - ( 2*((x+y+z) & 0x1) );
+  for (unsigned i=0; i<NUM; i++) {
+//    eta = ETA_UPDATE(x+i+y+i+z+i);
+    conjmat_vec_mul( &u[7], snum(x+i,y,z,tm), eta, in, snum(x+i,y,z,tm), &aux_tmp );
+    aux[i] = subResult(aux[i], aux_tmp);
+  }
 
 //////////////////////////////////////////////////////////////////////////////////////////////
 
@@ -320,32 +320,32 @@ __global__ void Doe(const __restrict su3_soa * const u, __restrict vec3_soa * co
 
 //////////////////////////////////////////////////////////////////////////////////////////////
   
-//  eta = 1;
-//  for (unsigned i=0; i<NUM; i++) {
-//    conjmat_vec_mul( &u[0], snum(xm[i],y,z,t), eta, in, snum(xm[i],y,z,t), &aux_tmp );
-//    aux[i] = subResult(aux[i], aux_tmp);
-//  }
-//
-////  eta = 1 - ( 2*(x & 0x1) ); // if (x % 2 = 0) eta = 1 else -1
-//  for (unsigned i=0; i<NUM; i++) {
-////    eta = ETA_UPDATE(x+i);
-//    conjmat_vec_mul( &u[2], snum(x+i,ym,z,t), eta, in, snum(x+i,ym,z,t), &aux_tmp );
-//    aux[i] = subResult(aux[i], aux_tmp);
-//  }
-//
-////  eta = 1 - ( 2*((x+y) & 0x1) );
-//  for (unsigned i=0; i<NUM; i++) {
-////    eta = ETA_UPDATE(x+i+y+i);
-//    conjmat_vec_mul( &u[4], snum(x+i,y,zm,t), eta, in, snum(x+i,y,zm,t), &aux_tmp);
-//    aux[i] = subResult(aux[i], aux_tmp);
-//  }
-//
-////  eta = 1 - ( 2*((x+y+z) & 0x1) );
-//  for (unsigned i=0; i<NUM; i++) {
-////    eta = ETA_UPDATE(x+i+y+i+z+i);
-//    conjmat_vec_mul( &u[6], snum(x+i,y,z,tm), eta, in, snum(x+i,y,z,tm), &aux_tmp );
-//    aux[i] = subResult(aux[i], aux_tmp);
-//  }
+  eta = 1;
+  for (unsigned i=0; i<NUM; i++) {
+    conjmat_vec_mul( &u[0], snum(xm[i],y,z,t), eta, in, snum(xm[i],y,z,t), &aux_tmp );
+    aux[i] = subResult(aux[i], aux_tmp);
+  }
+
+//  eta = 1 - ( 2*(x & 0x1) ); // if (x % 2 = 0) eta = 1 else -1
+  for (unsigned i=0; i<NUM; i++) {
+//    eta = ETA_UPDATE(x+i);
+    conjmat_vec_mul( &u[2], snum(x+i,ym,z,t), eta, in, snum(x+i,ym,z,t), &aux_tmp );
+    aux[i] = subResult(aux[i], aux_tmp);
+  }
+
+//  eta = 1 - ( 2*((x+y) & 0x1) );
+  for (unsigned i=0; i<NUM; i++) {
+//    eta = ETA_UPDATE(x+i+y+i);
+    conjmat_vec_mul( &u[4], snum(x+i,y,zm,t), eta, in, snum(x+i,y,zm,t), &aux_tmp);
+    aux[i] = subResult(aux[i], aux_tmp);
+  }
+
+//  eta = 1 - ( 2*((x+y+z) & 0x1) );
+  for (unsigned i=0; i<NUM; i++) {
+//    eta = ETA_UPDATE(x+i+y+i+z+i);
+    conjmat_vec_mul( &u[6], snum(x+i,y,z,tm), eta, in, snum(x+i,y,z,tm), &aux_tmp );
+    aux[i] = subResult(aux[i], aux_tmp);
+  }
 
 //////////////////////////////////////////////////////////////////////////////////////////////
 
