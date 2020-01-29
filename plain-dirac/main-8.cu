@@ -124,16 +124,24 @@ __host__ __device__ static __inline__ vec3 subResult ( vec3 aux, vec3 aux_tmp) {
   return aux;
 }
 
+__host__ __device__ static __inline__ int indexMapping(int x) {
+  if (x % 2 == 0) {
+    return x*2;
+  } else {
+      return x + (x-1);
+  }
+}
+
 __global__ void Deo(const __restrict su3_soa * const u, __restrict vec3_soa * const out, const __restrict vec3_soa * const in) {
 
-  int x, y, z, t, xm[NUM], ym, zm, tm, xp[NUM], yp, zp, tp, idxh, eta; //, idx;
+  int x, y, z, t, xm[NUM], ym, zm, tm, xp[NUM], yp, zp, tp, idxh[NUM], eta; //, idx;
 
   vec3 aux_tmp;
   vec3 aux[NUM];
 
-  idxh = ((blockIdx.z * blockDim.z + threadIdx.z) * nxh * ny)
-       + ((blockIdx.y * blockDim.y + threadIdx.y) * nxh)
-       +  (blockIdx.x * blockDim.x + threadIdx.x*NUM); // idxh = snum(x,y,z,t)
+  //idxh = ((blockIdx.z * blockDim.z + threadIdx.z) * nxh * ny)
+  //     + ((blockIdx.y * blockDim.y + threadIdx.y) * nxh)
+  //     +  (blockIdx.x * blockDim.x + threadIdx.x*NUM); // idxh = snum(x,y,z,t)
 
 //  idx = 2*idxh;
 //  t = (idx / vol3) % nt;
@@ -145,16 +153,14 @@ __global__ void Deo(const __restrict su3_soa * const u, __restrict vec3_soa * co
   z =   (blockIdx.z * blockDim.z + threadIdx.z) % nz;
   y =   (blockIdx.y * blockDim.y + threadIdx.y);
   x = 2*(blockIdx.x * blockDim.x + threadIdx.x) + ((y+z+t) & 0x1); //dispari sommo 1
-  //x = 2*(blockIdx.x * blockDim.x + threadIdx.x); //dispari sommo 1
 
-  // Each thread compute 8 mat_vec_mul for each coordinate.
-  //x *= NUM;
-  printf("x:%d y:%d, z:%d t:%d\tidx: %d\n", x, y, z, t, idxh);
+  for (unsigned i=0; i<NUM*2; i+=2)
+    idxh[i/2] = snum(x+i,y,z,t);
 
   // Coordinate +1, if on the end of the boundary: xm = nx-1. (the same for other coordinate).
-  for (unsigned i=0; i<NUM; i++) {
-    xm[i] = x+i*2 -1;
-    xm[i] = CHECK_PERIODIC_BOUNDARY_SUB(xm[i], nx);
+  for (unsigned i=0; i<NUM*2; i+=2) {
+    xm[i/2] = x+i -1;
+    xm[i/2] = CHECK_PERIODIC_BOUNDARY_SUB(xm[i/2], nx);
   }
   ym = y-1;
   ym = CHECK_PERIODIC_BOUNDARY_SUB(ym, ny);
@@ -164,9 +170,9 @@ __global__ void Deo(const __restrict su3_soa * const u, __restrict vec3_soa * co
   tm = CHECK_PERIODIC_BOUNDARY_SUB(tm, nt);
 
   // Coordinate -1, if on the end of the boundary: xm = 0. (the same for other coordinate).
-  for (unsigned i=0; i<NUM; i++) {
-    xp[i] = x+i*2 +1;
-    xp[i] *= CHECK_PERIODIC_BOUNDARY_ADD(xp[i], nx);
+  for (unsigned i=0; i<NUM*2; i+=2) {
+    xp[i/2] = x+i +1;
+    xp[i/2] *= CHECK_PERIODIC_BOUNDARY_ADD(xp[i/2], nx);
   }
   yp = y+1;
   yp *= CHECK_PERIODIC_BOUNDARY_ADD(yp, ny);
@@ -177,80 +183,80 @@ __global__ void Deo(const __restrict su3_soa * const u, __restrict vec3_soa * co
 
   // ETA can be ignored: Not affect the simulation.
   eta = 1;
-  for (unsigned i=0; i<NUM; i++) {
-    mat_vec_mul( &u[0], idxh+i, eta, in, snum(xp[i],y,z,t), &aux_tmp );
-    aux[i] = aux_tmp;
+  for (unsigned i=0; i<NUM*2; i+=2) {
+    mat_vec_mul( &u[0], idxh[i/2], eta, in, snum(xp[i/2],y,z,t), &aux_tmp );
+    aux[i/2] = aux_tmp;
   }
 
 //  eta = 1 - ( 2*(x & 0x1) ); // if (x % 2 = 0) eta = 1 else -1
-  for (unsigned i=0; i<NUM; i++) {
+  for (unsigned i=0; i<NUM*2; i+=2) {
 //    eta = ETA_UPDATE(x+i);
-    mat_vec_mul( &u[2], idxh+i, eta, in, snum(x+i,yp,z,t), &aux_tmp );
-    aux[i] = sumResult(aux[i], aux_tmp);
+    mat_vec_mul( &u[2], idxh[i/2], eta, in, snum(x+i,yp,z,t), &aux_tmp );
+    aux[i/2] = sumResult(aux[i/2], aux_tmp);
   }
 
 //  eta = 1 - ( 2*((x+y) & 0x1) );
-  for (unsigned i=0; i<NUM; i++) {
+  for (unsigned i=0; i<NUM*2; i+=2) {
 //    eta = ETA_UPDATE(x+i+y+i);
-    mat_vec_mul( &u[4], idxh+i, eta, in, snum(x+i,y,zp,t), &aux_tmp);
-    aux[i] = sumResult(aux[i], aux_tmp);
+    mat_vec_mul( &u[4], idxh[i/2], eta, in, snum(x+i,y,zp,t), &aux_tmp);
+    aux[i/2] = sumResult(aux[i/2], aux_tmp);
   }
 
 //  eta = 1 - ( 2*((x+y+z) & 0x1) );
-  for (unsigned i=0; i<NUM; i++) {
+  for (unsigned i=0; i<NUM*2; i+=2) {
 //    eta = ETA_UPDATE(x+i+y+i+z+i);
-    mat_vec_mul( &u[6], idxh+i, eta, in, snum(x+i,y,z,tp), &aux_tmp );
-    aux[i] = sumResult(aux[i], aux_tmp);
+    mat_vec_mul( &u[6], idxh[i/2], eta, in, snum(x+i,y,z,tp), &aux_tmp );
+    aux[i/2] = sumResult(aux[i/2], aux_tmp);
   }
 
 //////////////////////////////////////////////////////////////////////////////////////////////
     
   eta = 1;
-  for (unsigned i=0; i<NUM; i++) {
-    conjmat_vec_mul( &u[1], snum(xm[i],y,z,t), eta, in, snum(xm[i],y,z,t), &aux_tmp);
-    aux[i] = subResult(aux[i], aux_tmp);
+  for (unsigned i=0; i<NUM*2; i+=2) {
+    conjmat_vec_mul( &u[1], snum(xm[i/2],y,z,t), eta, in, snum(xm[i/2],y,z,t), &aux_tmp);
+    aux[i/2] = subResult(aux[i/2], aux_tmp);
   }
 
 //  eta = 1 - ( 2*(x & 0x1) );
-  for (unsigned i=0; i<NUM; i++) {
+  for (unsigned i=0; i<NUM*2; i+=2) {
 //    eta = ETA_UPDATE(x+i);
     conjmat_vec_mul( &u[3], snum(x+i,ym,z,t), eta, in, snum(x+i,ym,z,t), &aux_tmp );
-    aux[i] = subResult(aux[i], aux_tmp);
+    aux[i/2] = subResult(aux[i/2], aux_tmp);
   }
 
 //  eta = 1 - ( 2*((x+y) & 0x1) );
-  for (unsigned i=0; i<NUM; i++) {
+  for (unsigned i=0; i<NUM*2; i+=2) {
 //    eta = ETA_UPDATE(x+i+y+i);
     conjmat_vec_mul( &u[5], snum(x+i,y,zm,t), eta, in, snum(x+i,y,zm,t), &aux_tmp );
-    aux[i] = subResult(aux[i], aux_tmp);
+    aux[i/2] = subResult(aux[i/2], aux_tmp);
   }
 
 //  eta = 1 - ( 2*((x+y+z) & 0x1) );
-  for (unsigned i=0; i<NUM; i++) {
+  for (unsigned i=0; i<NUM*2; i+=2) {
 //    eta = ETA_UPDATE(x+i+y+i+z+i);
     conjmat_vec_mul( &u[7], snum(x+i,y,z,tm), eta, in, snum(x+i,y,z,tm), &aux_tmp );
-    aux[i] = subResult(aux[i], aux_tmp);
+    aux[i/2] = subResult(aux[i/2], aux_tmp);
   }
 
 //////////////////////////////////////////////////////////////////////////////////////////////
 
   for (unsigned i=0; i<NUM; i++) {
-    out->c0[idxh+i] = make_cuDoubleComplex(cuCreal(aux[i].c0)*0.5, cuCimag(aux[i].c0)*0.5);
-    out->c1[idxh+i] = make_cuDoubleComplex(cuCreal(aux[i].c1)*0.5, cuCimag(aux[i].c1)*0.5);
-    out->c2[idxh+i] = make_cuDoubleComplex(cuCreal(aux[i].c2)*0.5, cuCimag(aux[i].c2)*0.5);
+    out->c0[idxh[i]] = make_cuDoubleComplex(cuCreal(aux[i].c0)*0.5, cuCimag(aux[i].c0)*0.5);
+    out->c1[idxh[i]] = make_cuDoubleComplex(cuCreal(aux[i].c1)*0.5, cuCimag(aux[i].c1)*0.5);
+    out->c2[idxh[i]] = make_cuDoubleComplex(cuCreal(aux[i].c2)*0.5, cuCimag(aux[i].c2)*0.5);
   }
 }
 
 __global__ void Doe(const __restrict su3_soa * const u, __restrict vec3_soa * const out, const __restrict vec3_soa * const in) {
 
-  int x, y, z, t, xm[NUM], ym, zm, tm, xp[NUM], yp, zp, tp, idxh, eta; //, idx;
+  int x, y, z, t, xm[NUM], ym, zm, tm, xp[NUM], yp, zp, tp, idxh[NUM], eta; //, idx;
 
   vec3 aux_tmp;
   vec3 aux[NUM];
 
-  idxh = ((blockIdx.z * blockDim.z + threadIdx.z) * nxh * ny)                                                             
-       + ((blockIdx.y * blockDim.y + threadIdx.y) * nxh)                                                                 
-       +  (blockIdx.x * blockDim.x + threadIdx.x*NUM); // idxh = snum(x,y,z,t)   
+  //idxh = ((blockIdx.z * blockDim.z + threadIdx.z) * nxh * ny)                                                             
+  //     + ((blockIdx.y * blockDim.y + threadIdx.y) * nxh)                                                                 
+  //     +  (blockIdx.x * blockDim.x + threadIdx.x); // idxh = snum(x,y,z,t)   
 
 //  idx = 2*idxh;
 //  t = (idx / vol3) % nt;
@@ -263,13 +269,13 @@ __global__ void Doe(const __restrict su3_soa * const u, __restrict vec3_soa * co
   y =   (blockIdx.y * blockDim.y + threadIdx.y);
   x = 2*(blockIdx.x * blockDim.x + threadIdx.x) + ((y+z+t+1) & 0x1);
 
-  // Each thread compute 8 mat_vec_mul for each coordinate.
-  //x *= NUM;
-  
+  for (unsigned i=0; i<NUM*2; i+=2)
+    idxh[i/2] = snum(x+i,y,z,t);
+
   // Coordinate +1, if on the end of the boundary: xm = nx-1. (the same for other coordinate).
-  for (unsigned i=0; i<NUM; i++) {
-    xm[i] = x+i*2 -1;
-    xm[i] = CHECK_PERIODIC_BOUNDARY_SUB(xm[i], nx);
+  for (unsigned i=0; i<NUM*2; i+=2) {
+    xm[i/2] = x+i -1;
+    xm[i/2] = CHECK_PERIODIC_BOUNDARY_SUB(xm[i/2], nx);
   }
   ym = y-1;
   ym = CHECK_PERIODIC_BOUNDARY_SUB(ym, ny);
@@ -279,9 +285,9 @@ __global__ void Doe(const __restrict su3_soa * const u, __restrict vec3_soa * co
   tm = CHECK_PERIODIC_BOUNDARY_SUB(tm, nt);
 
   // Coordinate -1, if on the end of the boundary: xm = 0. (the same for other coordinate).
-  for (unsigned i=0; i<NUM; i++) {
-    xp[i] = x+i*2 +1;
-    xp[i] *= CHECK_PERIODIC_BOUNDARY_ADD(xp[i], nx);
+  for (unsigned i=0; i<NUM*2; i+=2) {
+    xp[i/2] = x+i +1;
+    xp[i/2] *= CHECK_PERIODIC_BOUNDARY_ADD(xp[i/2], nx);
   }
   yp = y+1;
   yp *= CHECK_PERIODIC_BOUNDARY_ADD(yp, ny);
@@ -292,67 +298,67 @@ __global__ void Doe(const __restrict su3_soa * const u, __restrict vec3_soa * co
 
   // ETA can be ignored: Not affect the simulation.
   eta = 1;
-  for (unsigned i=0; i<NUM; i++) {
-    mat_vec_mul( &u[1], idxh+i, eta, in, snum(xp[i],y,z,t), &aux_tmp );
-    aux[i] = aux_tmp;
+  for (unsigned i=0; i<NUM*2; i+=2) {
+    mat_vec_mul( &u[1], idxh[i/2], eta, in, snum(xp[i/2],y,z,t), &aux_tmp );
+    aux[i/2] = aux_tmp;
   }
 
 //  eta = 1 - ( 2*(x & 0x1) );
-  for (unsigned i=0; i<NUM; i++) {
+  for (unsigned i=0; i<NUM*2; i+=2) {
 //    eta = ETA_UPDATE(x+i);
-    mat_vec_mul( &u[3], idxh+i, eta, in, snum(x+i,yp,z,t), &aux_tmp );
-    aux[i] = sumResult(aux[i], aux_tmp);
+    mat_vec_mul( &u[3], idxh[i/2], eta, in, snum(x+i,yp,z,t), &aux_tmp );
+    aux[i/2] = sumResult(aux[i/2], aux_tmp);
   }
 
 //  eta = 1 - ( 2*((x+y) & 0x1) );
-  for (unsigned i=0; i<NUM; i++) {
+  for (unsigned i=0; i<NUM*2; i+=2) {
 //    eta = ETA_UPDATE(x+i+y+i);
-    mat_vec_mul( &u[5], idxh+i, eta, in, snum(x+i,y,zp,t), &aux_tmp );
-    aux[i] = sumResult(aux[i], aux_tmp);
+    mat_vec_mul( &u[5], idxh[i/2], eta, in, snum(x+i,y,zp,t), &aux_tmp );
+    aux[i/2] = sumResult(aux[i/2], aux_tmp);
   }
 
 //  eta = 1 - ( 2*((x+y+z) & 0x1) );
-  for (unsigned i=0; i<NUM; i++) {
+  for (unsigned i=0; i<NUM*2; i+=2) {
 //    eta = ETA_UPDATE(x+i+y+i+z+i);
-    mat_vec_mul( &u[7], idxh+i, eta, in, snum(x+i,y,z,tp), &aux_tmp );
-    aux[i] = sumResult(aux[i], aux_tmp);
+    mat_vec_mul( &u[7], idxh[i/2], eta, in, snum(x+i,y,z,tp), &aux_tmp );
+    aux[i/2] = sumResult(aux[i/2], aux_tmp);
   }
 
 //////////////////////////////////////////////////////////////////////////////////////////////
   
   eta = 1;
-  for (unsigned i=0; i<NUM; i++) {
-    conjmat_vec_mul( &u[0], snum(xm[i],y,z,t), eta, in, snum(xm[i],y,z,t), &aux_tmp );
-    aux[i] = subResult(aux[i], aux_tmp);
+  for (unsigned i=0; i<NUM*2; i+=2) {
+    conjmat_vec_mul( &u[0], snum(xm[i/2],y,z,t), eta, in, snum(xm[i/2],y,z,t), &aux_tmp );
+    aux[i/2] = subResult(aux[i/2], aux_tmp);
   }
 
 //  eta = 1 - ( 2*(x & 0x1) ); // if (x % 2 = 0) eta = 1 else -1
-  for (unsigned i=0; i<NUM; i++) {
+  for (unsigned i=0; i<NUM*2; i+=2) {
 //    eta = ETA_UPDATE(x+i);
     conjmat_vec_mul( &u[2], snum(x+i,ym,z,t), eta, in, snum(x+i,ym,z,t), &aux_tmp );
-    aux[i] = subResult(aux[i], aux_tmp);
+    aux[i/2] = subResult(aux[i/2], aux_tmp);
   }
 
 //  eta = 1 - ( 2*((x+y) & 0x1) );
-  for (unsigned i=0; i<NUM; i++) {
+  for (unsigned i=0; i<NUM*2; i+=2) {
 //    eta = ETA_UPDATE(x+i+y+i);
     conjmat_vec_mul( &u[4], snum(x+i,y,zm,t), eta, in, snum(x+i,y,zm,t), &aux_tmp);
-    aux[i] = subResult(aux[i], aux_tmp);
+    aux[i/2] = subResult(aux[i/2], aux_tmp);
   }
 
 //  eta = 1 - ( 2*((x+y+z) & 0x1) );
-  for (unsigned i=0; i<NUM; i++) {
+  for (unsigned i=0; i<NUM*2; i+=2) {
 //    eta = ETA_UPDATE(x+i+y+i+z+i);
     conjmat_vec_mul( &u[6], snum(x+i,y,z,tm), eta, in, snum(x+i,y,z,tm), &aux_tmp );
-    aux[i] = subResult(aux[i], aux_tmp);
+    aux[i/2] = subResult(aux[i/2], aux_tmp);
   }
 
 //////////////////////////////////////////////////////////////////////////////////////////////
 
   for (unsigned i=0; i<NUM; i++) {
-    out->c0[idxh+i] = make_cuDoubleComplex(cuCreal(aux[i].c0)*0.5, cuCimag(aux[i].c0)*0.5);
-    out->c1[idxh+i] = make_cuDoubleComplex(cuCreal(aux[i].c1)*0.5, cuCimag(aux[i].c1)*0.5);
-    out->c2[idxh+i] = make_cuDoubleComplex(cuCreal(aux[i].c2)*0.5, cuCimag(aux[i].c2)*0.5);
+    out->c0[idxh[i]] = make_cuDoubleComplex(cuCreal(aux[i].c0)*0.5, cuCimag(aux[i].c0)*0.5);
+    out->c1[idxh[i]] = make_cuDoubleComplex(cuCreal(aux[i].c1)*0.5, cuCimag(aux[i].c1)*0.5);
+    out->c2[idxh[i]] = make_cuDoubleComplex(cuCreal(aux[i].c2)*0.5, cuCimag(aux[i].c2)*0.5);
   }
 }
 
