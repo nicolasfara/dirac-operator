@@ -18,7 +18,7 @@ CC_CFLAGS=-O3 --ptxas-options=-v -lineinfo -gencode arch=compute_61,code=sm_61 #
 
 ###############################################################################
 
-all: cuda cuda-8
+all: cuda cuda-8 plain
 
 ###############################################################################
 
@@ -30,6 +30,13 @@ cuda: common-cuda.h
 
 cuda-8: common-cuda.h
 	nvcc $(LATTICE) $(CC_CFLAGS) main-8.cu -o dirac-operator-8
+
+openacc: common-acc.h
+	gcc $(LATTICE) -fopenacc -foffload=nvptx-none -foffload="-O3" -O3 -o dirac-operator-acc
+
+plain: common-acc.h
+	gcc $(LATTICE) main-plain.c -o dirac-operator-plain
+	gcc $(LATTICE) main-plain-8.c -fstack-protector -g -o dirac-operator-plain-8
 
 # CLEAN
 
