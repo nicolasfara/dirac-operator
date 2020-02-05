@@ -21,7 +21,7 @@
 //Decomment this to allocate and store the 3rd su3 matrix line
 //#define ALLOCROW3
 //Decomment this to store and read the 3rd su3 matrix line
-//#define READROW3
+#define READROW3
 //If we want to read it we should also allocate it
 #ifdef READROW3 
   #define ALLOCROW3

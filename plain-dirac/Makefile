@@ -11,14 +11,14 @@ CC=nvcc
 #CC_CFLAGS=-O3 --ptxas-options=-v -lineinfo -gencode arch=compute_37,code=sm_37 -keep
 
 # V100
-#CC_CFLAGS=-O3 --ptxas-options=-v -lineinfo -gencode arch=compute_70,code=sm_70 #-keep
+CC_CFLAGS_V=-O3 --ptxas-options=-v -lineinfo -gencode arch=compute_70,code=sm_70 #-keep
 
 # 1050
 CC_CFLAGS=-O3 --ptxas-options=-v -lineinfo -gencode arch=compute_61,code=sm_61 #-keep
 
 ###############################################################################
 
-all: cuda cuda-8 plain
+all: cuda cuda-8 plain tc
 
 ###############################################################################
 
@@ -31,8 +31,8 @@ cuda: common-cuda.h
 cuda-8: common-cuda.h
 	nvcc $(LATTICE) $(CC_CFLAGS) main-8.cu -o dirac-operator-8
 
-openacc: common-acc.h
-	gcc $(LATTICE) -fopenacc -foffload=nvptx-none -foffload="-O3" -O3 -o dirac-operator-acc
+tc: common-cuda.h tensor-core.h
+	nvcc $(LATTICE) $(CC_CFLAGS_V) main-tc.cu -o dirac-operator-tc
 
 plain: common-acc.h
 	gcc $(LATTICE) main-plain.c -o dirac-operator-plain

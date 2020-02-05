@@ -77,9 +77,9 @@ __host__ __device__ static __inline__ void conjmat_vec_mul( const __restrict su3
 
 #ifdef READROW3
 // Load 3rd matrix row from global memory
-//  cuDoubleComplex mat20 = matrix->r2.c0[idx_mat];
-//  cuDoubleComplex mat21 = matrix->r2.c1[idx_mat];
-//  cuDoubleComplex mat22 = matrix->r2.c2[idx_mat];
+  cuDoubleComplex mat20 = matrix->r2.c0[idx_mat];
+  cuDoubleComplex mat21 = matrix->r2.c1[idx_mat];
+  cuDoubleComplex mat22 = matrix->r2.c2[idx_mat];
 #else
 //Compute 3rd matrix row from the first two
   cuDoubleComplex mat20 = cuConj( cuCsub( cuCmul( mat01, mat12 ), cuCmul( mat02, mat11) ) );
@@ -124,13 +124,6 @@ __host__ __device__ static __inline__ vec3 subResult ( vec3 aux, vec3 aux_tmp) {
   return aux;
 }
 
-__host__ __device__ static __inline__ int indexMapping(int x) {
-  if (x % 2 == 0) {
-    return x*2;
-  } else {
-      return x + (x-1);
-  }
-}
 
 __global__ void Deo(const __restrict su3_soa * const u, __restrict vec3_soa * const out, const __restrict vec3_soa * const in) {
 
