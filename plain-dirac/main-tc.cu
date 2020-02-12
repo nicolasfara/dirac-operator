@@ -191,8 +191,9 @@ __global__ void Deo(const __restrict su3_soa * const u, __restrict vec3_soa * co
 
   tensor_mat_vec_mul(&u[0], idxh, in, snum_vec, aux_tmp);
 
-  for (unsigned i=0; i<NUM*2; i+=2)
-    aux[i/2] = aux_tmp[i/2];
+  if (threadIdx.x <= 1)
+    for (unsigned i=0; i<NUM*2; i+=2)
+      aux[i/2] = aux_tmp[i/2];
 
 //  eta = 1 - ( 2*(x & 0x1) ); // if (x % 2 = 0) eta = 1 else -1
   //for (unsigned i=0; i<NUM*2; i+=2) {
@@ -206,8 +207,9 @@ __global__ void Deo(const __restrict su3_soa * const u, __restrict vec3_soa * co
 
   tensor_mat_vec_mul(&u[2], idxh, in, snum_vec, aux_tmp);
   
-  for (unsigned i=0; i<NUM*2; i+=2)
-    aux[i/2] = sumResult(aux[i/2], aux_tmp[i/2]);
+  if (threadIdx.x <= 1)
+    for (unsigned i=0; i<NUM*2; i+=2)
+      aux[i/2] = sumResult(aux[i/2], aux_tmp[i/2]);
 
 //  eta = 1 - ( 2*((x+y) & 0x1) );
   //for (unsigned i=0; i<NUM*2; i+=2) {
@@ -221,8 +223,9 @@ __global__ void Deo(const __restrict su3_soa * const u, __restrict vec3_soa * co
 
   tensor_mat_vec_mul(&u[4], idxh, in, snum_vec, aux_tmp);
   
-  for (unsigned i=0; i<NUM*2; i+=2)
-    aux[i/2] = sumResult(aux[i/2], aux_tmp[i/2]);
+  if (threadIdx.x <= 1)
+    for (unsigned i=0; i<NUM*2; i+=2)
+      aux[i/2] = sumResult(aux[i/2], aux_tmp[i/2]);
 
 //  eta = 1 - ( 2*((x+y+z) & 0x1) );
   //for (unsigned i=0; i<NUM*2; i+=2) {
@@ -236,8 +239,9 @@ __global__ void Deo(const __restrict su3_soa * const u, __restrict vec3_soa * co
 
   tensor_mat_vec_mul(&u[6], idxh, in, snum_vec, aux_tmp);
   
-  for (unsigned i=0; i<NUM*2; i+=2)
-    aux[i/2] = sumResult(aux[i/2], aux_tmp[i/2]);
+  if (threadIdx.x <= 1)
+    for (unsigned i=0; i<NUM*2; i+=2)
+      aux[i/2] = sumResult(aux[i/2], aux_tmp[i/2]);
 
 //////////////////////////////////////////////////////////////////////////////////////////////
     
@@ -252,8 +256,9 @@ __global__ void Deo(const __restrict su3_soa * const u, __restrict vec3_soa * co
 
   tensor_mat_vec_mul(&u[1], idxh, in, snum_vec, aux_tmp);
   
-  for (unsigned i=0; i<NUM*2; i+=2)
-    aux[i/2] = subResult(aux[i/2], aux_tmp[i/2]);
+  if (threadIdx.x <= 1)
+    for (unsigned i=0; i<NUM*2; i+=2)
+      aux[i/2] = subResult(aux[i/2], aux_tmp[i/2]);
 
 //  eta = 1 - ( 2*(x & 0x1) );
   //for (unsigned i=0; i<NUM*2; i+=2) {
@@ -267,8 +272,9 @@ __global__ void Deo(const __restrict su3_soa * const u, __restrict vec3_soa * co
 
   tensor_mat_vec_mul(&u[3], idxh, in, snum_vec, aux_tmp);
   
-  for (unsigned i=0; i<NUM*2; i+=2)
-    aux[i/2] = subResult(aux[i/2], aux_tmp[i/2]);
+  if (threadIdx.x <= 1)
+    for (unsigned i=0; i<NUM*2; i+=2)
+      aux[i/2] = subResult(aux[i/2], aux_tmp[i/2]);
 
 //  eta = 1 - ( 2*((x+y) & 0x1) );
   //for (unsigned i=0; i<NUM*2; i+=2) {
@@ -282,8 +288,9 @@ __global__ void Deo(const __restrict su3_soa * const u, __restrict vec3_soa * co
 
   tensor_mat_vec_mul(&u[5], idxh, in, snum_vec, aux_tmp);
   
-  for (unsigned i=0; i<NUM*2; i+=2)
-    aux[i/2] = subResult(aux[i/2], aux_tmp[i/2]);
+  if (threadIdx.x <= 1)
+    for (unsigned i=0; i<NUM*2; i+=2)
+      aux[i/2] = subResult(aux[i/2], aux_tmp[i/2]);
 
 //  eta = 1 - ( 2*((x+y+z) & 0x1) );
   //for (unsigned i=0; i<NUM*2; i+=2) {
@@ -377,8 +384,9 @@ __global__ void Doe(const __restrict su3_soa * const u, __restrict vec3_soa * co
   
   tensor_mat_vec_mul(&u[1], idxh, in, snum_vec, aux_tmp);
   
-  for (unsigned i=0; i<NUM*2; i+=2)
-    aux[i/2] = aux_tmp[i/2];
+  if (threadIdx.x <= 1)
+    for (unsigned i=0; i<NUM*2; i+=2)
+      aux[i/2] = aux_tmp[i/2];
 
 //  eta = 1 - ( 2*(x & 0x1) );
   //for (unsigned i=0; i<NUM*2; i+=2) {
@@ -392,8 +400,9 @@ __global__ void Doe(const __restrict su3_soa * const u, __restrict vec3_soa * co
   
   tensor_mat_vec_mul(&u[3], idxh, in, snum_vec, aux_tmp);
 
-  for (unsigned i=0; i<NUM*2; i+=2)
-    aux[i/2] = sumResult(aux[i/2], aux_tmp[i/2]);
+  if (threadIdx.x <= 1)
+    for (unsigned i=0; i<NUM*2; i+=2)
+      aux[i/2] = sumResult(aux[i/2], aux_tmp[i/2]);
 
 //  eta = 1 - ( 2*((x+y) & 0x1) );
   //for (unsigned i=0; i<NUM*2; i+=2) {
@@ -407,8 +416,9 @@ __global__ void Doe(const __restrict su3_soa * const u, __restrict vec3_soa * co
   
   tensor_mat_vec_mul(&u[5], idxh, in, snum_vec, aux_tmp);
   
-  for (unsigned i=0; i<NUM*2; i+=2)
-    aux[i/2] = sumResult(aux[i/2], aux_tmp[i/2]);
+  if (threadIdx.x <= 1)
+    for (unsigned i=0; i<NUM*2; i+=2)
+      aux[i/2] = sumResult(aux[i/2], aux_tmp[i/2]);
 
 //  eta = 1 - ( 2*((x+y+z) & 0x1) );
   //for (unsigned i=0; i<NUM*2; i+=2) {
@@ -422,8 +432,9 @@ __global__ void Doe(const __restrict su3_soa * const u, __restrict vec3_soa * co
 
   tensor_mat_vec_mul(&u[7], idxh, in, snum_vec, aux_tmp);
   
-  for (unsigned i=0; i<NUM*2; i+=2)
-    aux[i/2] = sumResult(aux[i/2], aux_tmp[i/2]);
+  if (threadIdx.x <= 1)
+    for (unsigned i=0; i<NUM*2; i+=2)
+      aux[i/2] = sumResult(aux[i/2], aux_tmp[i/2]);
 
 //////////////////////////////////////////////////////////////////////////////////////////////
   
@@ -438,8 +449,9 @@ __global__ void Doe(const __restrict su3_soa * const u, __restrict vec3_soa * co
 
   tensor_mat_vec_mul(&u[0], snum_vec, in, snum_vec, aux_tmp);
   
-  for (unsigned i=0; i<NUM*2; i+=2)
-    aux[i/2] = subResult(aux[i/2], aux_tmp[i/2]);
+  if (threadIdx.x <= 1)
+    for (unsigned i=0; i<NUM*2; i+=2)
+      aux[i/2] = subResult(aux[i/2], aux_tmp[i/2]);
 
 //  eta = 1 - ( 2*(x & 0x1) ); // if (x % 2 = 0) eta = 1 else -1
   //for (unsigned i=0; i<NUM*2; i+=2) {
@@ -453,8 +465,9 @@ __global__ void Doe(const __restrict su3_soa * const u, __restrict vec3_soa * co
 
   tensor_mat_vec_mul(&u[2], snum_vec, in, snum_vec, aux_tmp);
   
-  for (unsigned i=0; i<NUM*2; i+=2)
-    aux[i/2] = subResult(aux[i/2], aux_tmp[i/2]);
+  if (threadIdx.x <= 1)
+    for (unsigned i=0; i<NUM*2; i+=2)
+      aux[i/2] = subResult(aux[i/2], aux_tmp[i/2]);
 
 //  eta = 1 - ( 2*((x+y) & 0x1) );
   //for (unsigned i=0; i<NUM*2; i+=2) {
@@ -468,8 +481,9 @@ __global__ void Doe(const __restrict su3_soa * const u, __restrict vec3_soa * co
 
   tensor_mat_vec_mul(&u[4], snum_vec, in, snum_vec, aux_tmp);
   
-  for (unsigned i=0; i<NUM*2; i+=2)
-    aux[i/2] = subResult(aux[i/2], aux_tmp[i/2]);
+  if (threadIdx.x <= 1)
+    for (unsigned i=0; i<NUM*2; i+=2)
+      aux[i/2] = subResult(aux[i/2], aux_tmp[i/2]);
 
 //  eta = 1 - ( 2*((x+y+z) & 0x1) );
   //for (unsigned i=0; i<NUM*2; i+=2) {
@@ -483,8 +497,9 @@ __global__ void Doe(const __restrict su3_soa * const u, __restrict vec3_soa * co
 
   tensor_mat_vec_mul(&u[6], snum_vec, in, snum_vec, aux_tmp);
   
-  for (unsigned i=0; i<NUM*2; i+=2)
-    aux[i/2] = subResult(aux[i/2], aux_tmp[i/2]);
+  if (threadIdx.x <= 1)
+    for (unsigned i=0; i<NUM*2; i+=2)
+      aux[i/2] = subResult(aux[i/2], aux_tmp[i/2]);
 
 //////////////////////////////////////////////////////////////////////////////////////////////
 
