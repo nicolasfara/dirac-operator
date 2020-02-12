@@ -3,7 +3,6 @@
 #include <sys/time.h>
 
 #include "common-cuda.h"
-#include "tensor-core.h"
 
 #define NUM 8
 
@@ -128,9 +127,9 @@ __host__ __device__ static __inline__ vec3 subResult ( vec3 aux, vec3 aux_tmp) {
 
 __global__ void Deo(const __restrict su3_soa * const u, __restrict vec3_soa * const out, const __restrict vec3_soa * const in) {
 
-  int x, y, z, t, xm[NUM], ym, zm, tm, xp[NUM], yp, zp, tp, idxh[NUM], eta; //, idx;
+  int x, y, z, t, xm[NUM], ym, zm, tm, xp[NUM], yp, zp, tp, idxh[NUM], eta, snum_vec[NUM]; //, idx;
 
-  vec3 aux_tmp;
+  vec3 aux_tmp[NUM];
   vec3 aux[NUM];
 
   //idxh = ((blockIdx.z * blockDim.z + threadIdx.z) * nxh * ny)
@@ -148,96 +147,167 @@ __global__ void Deo(const __restrict su3_soa * const u, __restrict vec3_soa * co
   y =   (blockIdx.y * blockDim.y + threadIdx.y);
   x = 2*(blockIdx.x * blockDim.x + threadIdx.x) + ((y+z+t) & 0x1); //dispari sommo 1
 
-  for (unsigned i=0; i<NUM*2; i+=2)
-    idxh[i/2] = snum(x+i,y,z,t);
+  if (threadIdx.x <= 1)
+    for (unsigned i=0; i<NUM*2; i+=2)
+      idxh[i/2] = snum(x+i,y,z,t);
 
   // Coordinate +1, if on the end of the boundary: xm = nx-1. (the same for other coordinate).
-  for (unsigned i=0; i<NUM*2; i+=2) {
-    xm[i/2] = x+i -1;
-    xm[i/2] = CHECK_PERIODIC_BOUNDARY_SUB(xm[i/2], nx);
+  if (threadIdx.x <= 1) {
+    for (unsigned i=0; i<NUM*2; i+=2) {
+      xm[i/2] = x+i -1;
+      xm[i/2] = CHECK_PERIODIC_BOUNDARY_SUB(xm[i/2], nx);
+    }
+    ym = y-1;
+    ym = CHECK_PERIODIC_BOUNDARY_SUB(ym, ny);
+    zm = z-1;
+    zm = CHECK_PERIODIC_BOUNDARY_SUB(zm, nz);
+    tm = t-1;
+    tm = CHECK_PERIODIC_BOUNDARY_SUB(tm, nt);
   }
-  ym = y-1;
-  ym = CHECK_PERIODIC_BOUNDARY_SUB(ym, ny);
-  zm = z-1;
-  zm = CHECK_PERIODIC_BOUNDARY_SUB(zm, nz);
-  tm = t-1;
-  tm = CHECK_PERIODIC_BOUNDARY_SUB(tm, nt);
 
   // Coordinate -1, if on the end of the boundary: xm = 0. (the same for other coordinate).
-  for (unsigned i=0; i<NUM*2; i+=2) {
-    xp[i/2] = x+i +1;
-    xp[i/2] *= CHECK_PERIODIC_BOUNDARY_ADD(xp[i/2], nx);
+  if (threadIdx.x <= 1) {
+    for (unsigned i=0; i<NUM*2; i+=2) {
+      xp[i/2] = x+i +1;
+      xp[i/2] *= CHECK_PERIODIC_BOUNDARY_ADD(xp[i/2], nx);
+    }
+    yp = y+1;
+    yp *= CHECK_PERIODIC_BOUNDARY_ADD(yp, ny);
+    zp = z+1;
+    zp *= CHECK_PERIODIC_BOUNDARY_ADD(zp, nz);
+    tp = t+1;
+    tp *= CHECK_PERIODIC_BOUNDARY_ADD(tp, nt);
   }
-  yp = y+1;
-  yp *= CHECK_PERIODIC_BOUNDARY_ADD(yp, ny);
-  zp = z+1;
-  zp *= CHECK_PERIODIC_BOUNDARY_ADD(zp, nz);
-  tp = t+1;
-  tp *= CHECK_PERIODIC_BOUNDARY_ADD(tp, nt);
 
   // ETA can be ignored: Not affect the simulation.
   eta = 1;
-  for (unsigned i=0; i<NUM*2; i+=2) {
-    mat_vec_mul( &u[0], idxh[i/2], eta, in, snum(xp[i/2],y,z,t), &aux_tmp );
-    aux[i/2] = aux_tmp;
-  }
+  //for (unsigned i=0; i<NUM*2; i+=2) {
+  //  mat_vec_mul( &u[0], idxh[i/2], eta, in, snum(xp[i/2],y,z,t), &aux_tmp );
+  //  aux[i/2] = aux_tmp;
+  //}
+  if (threadIdx.x <= 1) 
+    for (unsigned i=0; i<NUM*2; i+=2)
+      snum_vec[i/2] = snum(xp[i/2], y, z, t);
+
+  tensor_mat_vec_mul(&u[0], idxh, in, snum_vec, aux_tmp);
+
+  for (unsigned i=0; i<NUM*2; i+=2)
+    aux[i/2] = aux_tmp[i/2];
 
 //  eta = 1 - ( 2*(x & 0x1) ); // if (x % 2 = 0) eta = 1 else -1
-  for (unsigned i=0; i<NUM*2; i+=2) {
-//    eta = ETA_UPDATE(x+i);
-    mat_vec_mul( &u[2], idxh[i/2], eta, in, snum(x+i,yp,z,t), &aux_tmp );
-    aux[i/2] = sumResult(aux[i/2], aux_tmp);
-  }
+  //for (unsigned i=0; i<NUM*2; i+=2) {
+////    eta = ETA_UPDATE(x+i);
+  //  mat_vec_mul( &u[2], idxh[i/2], eta, in, snum(x+i,yp,z,t), &aux_tmp );
+  //  aux[i/2] = sumResult(aux[i/2], aux_tmp);
+  //}
+  if (threadIdx.x <= 1) 
+    for (unsigned i=0; i<NUM*2; i+=2)
+      snum_vec[i/2] = snum(x+i,yp,z,t);
+
+  tensor_mat_vec_mul(&u[2], idxh, in, snum_vec, aux_tmp);
+  
+  for (unsigned i=0; i<NUM*2; i+=2)
+    aux[i/2] = sumResult(aux[i/2], aux_tmp[i/2]);
 
 //  eta = 1 - ( 2*((x+y) & 0x1) );
-  for (unsigned i=0; i<NUM*2; i+=2) {
-//    eta = ETA_UPDATE(x+i+y+i);
-    mat_vec_mul( &u[4], idxh[i/2], eta, in, snum(x+i,y,zp,t), &aux_tmp);
-    aux[i/2] = sumResult(aux[i/2], aux_tmp);
-  }
+  //for (unsigned i=0; i<NUM*2; i+=2) {
+////    eta = ETA_UPDATE(x+i+y+i);
+  //  mat_vec_mul( &u[4], idxh[i/2], eta, in, snum(x+i,y,zp,t), &aux_tmp);
+  //  aux[i/2] = sumResult(aux[i/2], aux_tmp);
+  //}
+  if (threadIdx.x <= 1) 
+    for (unsigned i=0; i<NUM*2; i+=2)
+      snum_vec[i/2] = snum(x+i,y,zp,t);
+
+  tensor_mat_vec_mul(&u[4], idxh, in, snum_vec, aux_tmp);
+  
+  for (unsigned i=0; i<NUM*2; i+=2)
+    aux[i/2] = sumResult(aux[i/2], aux_tmp[i/2]);
 
 //  eta = 1 - ( 2*((x+y+z) & 0x1) );
-  for (unsigned i=0; i<NUM*2; i+=2) {
-//    eta = ETA_UPDATE(x+i+y+i+z+i);
-    mat_vec_mul( &u[6], idxh[i/2], eta, in, snum(x+i,y,z,tp), &aux_tmp );
-    aux[i/2] = sumResult(aux[i/2], aux_tmp);
-  }
+  //for (unsigned i=0; i<NUM*2; i+=2) {
+////    eta = ETA_UPDATE(x+i+y+i+z+i);
+  //  mat_vec_mul( &u[6], idxh[i/2], eta, in, snum(x+i,y,z,tp), &aux_tmp );
+  //  aux[i/2] = sumResult(aux[i/2], aux_tmp);
+  //}
+  if (threadIdx.x <= 1) 
+    for (unsigned i=0; i<NUM*2; i+=2)
+      snum_vec[i/2] = snum(x+i,y,z,tp);
+
+  tensor_mat_vec_mul(&u[6], idxh, in, snum_vec, aux_tmp);
+  
+  for (unsigned i=0; i<NUM*2; i+=2)
+    aux[i/2] = sumResult(aux[i/2], aux_tmp[i/2]);
 
 //////////////////////////////////////////////////////////////////////////////////////////////
     
   eta = 1;
-  for (unsigned i=0; i<NUM*2; i+=2) {
-    conjmat_vec_mul( &u[1], snum(xm[i/2],y,z,t), eta, in, snum(xm[i/2],y,z,t), &aux_tmp);
-    aux[i/2] = subResult(aux[i/2], aux_tmp);
-  }
+  //for (unsigned i=0; i<NUM*2; i+=2) {
+  //  conjmat_vec_mul( &u[1], snum(xm[i/2],y,z,t), eta, in, snum(xm[i/2],y,z,t), &aux_tmp);
+  //  aux[i/2] = subResult(aux[i/2], aux_tmp);
+  //}
+  if (threadIdx.x <= 1) 
+    for (unsigned i=0; i<NUM*2; i+=2)
+      snum_vec[i/2] = snum(xm[i/2],y,z,t);
+
+  tensor_mat_vec_mul(&u[1], idxh, in, snum_vec, aux_tmp);
+  
+  for (unsigned i=0; i<NUM*2; i+=2)
+    aux[i/2] = subResult(aux[i/2], aux_tmp[i/2]);
 
 //  eta = 1 - ( 2*(x & 0x1) );
-  for (unsigned i=0; i<NUM*2; i+=2) {
-//    eta = ETA_UPDATE(x+i);
-    conjmat_vec_mul( &u[3], snum(x+i,ym,z,t), eta, in, snum(x+i,ym,z,t), &aux_tmp );
-    aux[i/2] = subResult(aux[i/2], aux_tmp);
-  }
+  //for (unsigned i=0; i<NUM*2; i+=2) {
+////    eta = ETA_UPDATE(x+i);
+  //  conjmat_vec_mul( &u[3], snum(x+i,ym,z,t), eta, in, snum(x+i,ym,z,t), &aux_tmp );
+  //  aux[i/2] = subResult(aux[i/2], aux_tmp);
+  //}
+  if (threadIdx.x <= 1) 
+    for (unsigned i=0; i<NUM*2; i+=2)
+      snum_vec[i/2] = snum(x+i,ym,z,t);
+
+  tensor_mat_vec_mul(&u[3], idxh, in, snum_vec, aux_tmp);
+  
+  for (unsigned i=0; i<NUM*2; i+=2)
+    aux[i/2] = subResult(aux[i/2], aux_tmp[i/2]);
 
 //  eta = 1 - ( 2*((x+y) & 0x1) );
-  for (unsigned i=0; i<NUM*2; i+=2) {
-//    eta = ETA_UPDATE(x+i+y+i);
-    conjmat_vec_mul( &u[5], snum(x+i,y,zm,t), eta, in, snum(x+i,y,zm,t), &aux_tmp );
-    aux[i/2] = subResult(aux[i/2], aux_tmp);
-  }
+  //for (unsigned i=0; i<NUM*2; i+=2) {
+////    eta = ETA_UPDATE(x+i+y+i);
+  //  conjmat_vec_mul( &u[5], snum(x+i,y,zm,t), eta, in, snum(x+i,y,zm,t), &aux_tmp );
+  //  aux[i/2] = subResult(aux[i/2], aux_tmp);
+  //}
+  if (threadIdx.x <= 1) 
+    for (unsigned i=0; i<NUM*2; i+=2)
+      snum_vec[i/2] = snum(x+i,y,zm,t);
+
+  tensor_mat_vec_mul(&u[5], idxh, in, snum_vec, aux_tmp);
+  
+  for (unsigned i=0; i<NUM*2; i+=2)
+    aux[i/2] = subResult(aux[i/2], aux_tmp[i/2]);
 
 //  eta = 1 - ( 2*((x+y+z) & 0x1) );
-  for (unsigned i=0; i<NUM*2; i+=2) {
-//    eta = ETA_UPDATE(x+i+y+i+z+i);
-    conjmat_vec_mul( &u[7], snum(x+i,y,z,tm), eta, in, snum(x+i,y,z,tm), &aux_tmp );
-    aux[i/2] = subResult(aux[i/2], aux_tmp);
-  }
+  //for (unsigned i=0; i<NUM*2; i+=2) {
+////    eta = ETA_UPDATE(x+i+y+i+z+i);
+  //  conjmat_vec_mul( &u[7], snum(x+i,y,z,tm), eta, in, snum(x+i,y,z,tm), &aux_tmp );
+  //  aux[i/2] = subResult(aux[i/2], aux_tmp);
+  //}
+  if (threadIdx.x <= 1) 
+    for (unsigned i=0; i<NUM*2; i+=2)
+      snum_vec[i/2] = snum(x+i,y,z,tm);
+
+  tensor_mat_vec_mul(&u[7], idxh, in, snum_vec, aux_tmp);
+  
+  for (unsigned i=0; i<NUM*2; i+=2)
+    aux[i/2] = subResult(aux[i/2], aux_tmp[i/2]);
 
 //////////////////////////////////////////////////////////////////////////////////////////////
 
-  for (unsigned i=0; i<NUM; i++) {
-    out->c0[idxh[i]] = make_cuDoubleComplex(cuCreal(aux[i].c0)*0.5, cuCimag(aux[i].c0)*0.5);
-    out->c1[idxh[i]] = make_cuDoubleComplex(cuCreal(aux[i].c1)*0.5, cuCimag(aux[i].c1)*0.5);
-    out->c2[idxh[i]] = make_cuDoubleComplex(cuCreal(aux[i].c2)*0.5, cuCimag(aux[i].c2)*0.5);
+  if (threadIdx.x <= 1) {
+    for (unsigned i=0; i<NUM; i++) {
+      out->c0[idxh[i]] = make_cuDoubleComplex(cuCreal(aux[i].c0)*0.5, cuCimag(aux[i].c0)*0.5);
+      out->c1[idxh[i]] = make_cuDoubleComplex(cuCreal(aux[i].c1)*0.5, cuCimag(aux[i].c1)*0.5);
+      out->c2[idxh[i]] = make_cuDoubleComplex(cuCreal(aux[i].c2)*0.5, cuCimag(aux[i].c2)*0.5);
+    }
   }
 }
 
@@ -245,7 +315,7 @@ __global__ void Doe(const __restrict su3_soa * const u, __restrict vec3_soa * co
 
   int x, y, z, t, xm[NUM], ym, zm, tm, xp[NUM], yp, zp, tp, idxh[NUM], eta, snum_vec[NUM]; //, idx;
 
-  vec3 aux_tmp;
+  vec3 aux_tmp[NUM];
   vec3 aux[NUM];
 
   //idxh = ((blockIdx.z * blockDim.z + threadIdx.z) * nxh * ny)                                                             
@@ -300,69 +370,130 @@ __global__ void Doe(const __restrict su3_soa * const u, __restrict vec3_soa * co
   //  mat_vec_mul( &u[1], idxh[i/2], eta, in, snum(xp[i/2],y,z,t), &aux_tmp );
   //  aux[i/2] = aux_tmp;
   //}
-  if (threadIdx.x == 0) {
-    for (unsigned i=0; i<NUM*2; i+=2){
+  if (threadIdx.x <= 1) 
+    for (unsigned i=0; i<NUM*2; i+=2)
       snum_vec[i/2] = snum(xp[i/2], y, z, t);
-    }
-  }
-  tensor_mat_vec_mul(&[1], idxh, in, snum_vec, aux);
+    
+  
+  tensor_mat_vec_mul(&u[1], idxh, in, snum_vec, aux_tmp);
+  
+  for (unsigned i=0; i<NUM*2; i+=2)
+    aux[i/2] = aux_tmp[i/2];
 
 //  eta = 1 - ( 2*(x & 0x1) );
-  for (unsigned i=0; i<NUM*2; i+=2) {
-//    eta = ETA_UPDATE(x+i);
-    mat_vec_mul( &u[3], idxh[i/2], eta, in, snum(x+i,yp,z,t), &aux_tmp );
-    aux[i/2] = sumResult(aux[i/2], aux_tmp);
-  }
+  //for (unsigned i=0; i<NUM*2; i+=2) {
+////    eta = ETA_UPDATE(x+i);
+  //  mat_vec_mul( &u[3], idxh[i/2], eta, in, snum(x+i,yp,z,t), &aux_tmp );
+  //  aux[i/2] = sumResult(aux[i/2], aux_tmp);
+  //}
+  if (threadIdx.x <= 1)
+    for (unsigned i=0; i<NUM*2; i+=2)
+      snum_vec[i/2] = snum(x+i,yp,z,t);
+  
+  tensor_mat_vec_mul(&u[3], idxh, in, snum_vec, aux_tmp);
+
+  for (unsigned i=0; i<NUM*2; i+=2)
+    aux[i/2] = sumResult(aux[i/2], aux_tmp[i/2]);
 
 //  eta = 1 - ( 2*((x+y) & 0x1) );
-  for (unsigned i=0; i<NUM*2; i+=2) {
-//    eta = ETA_UPDATE(x+i+y+i);
-    mat_vec_mul( &u[5], idxh[i/2], eta, in, snum(x+i,y,zp,t), &aux_tmp );
-    aux[i/2] = sumResult(aux[i/2], aux_tmp);
-  }
+  //for (unsigned i=0; i<NUM*2; i+=2) {
+////    eta = ETA_UPDATE(x+i+y+i);
+  //  mat_vec_mul( &u[5], idxh[i/2], eta, in, snum(x+i,y,zp,t), &aux_tmp );
+  //  aux[i/2] = sumResult(aux[i/2], aux_tmp);
+  //}
+  if (threadIdx.x <= 1)
+    for (unsigned i=0; i<NUM*2; i+=2)
+      snum_vec[i/2] = snum(x+i,y,zp,t);
+  
+  tensor_mat_vec_mul(&u[5], idxh, in, snum_vec, aux_tmp);
+  
+  for (unsigned i=0; i<NUM*2; i+=2)
+    aux[i/2] = sumResult(aux[i/2], aux_tmp[i/2]);
 
 //  eta = 1 - ( 2*((x+y+z) & 0x1) );
-  for (unsigned i=0; i<NUM*2; i+=2) {
-//    eta = ETA_UPDATE(x+i+y+i+z+i);
-    mat_vec_mul( &u[7], idxh[i/2], eta, in, snum(x+i,y,z,tp), &aux_tmp );
-    aux[i/2] = sumResult(aux[i/2], aux_tmp);
-  }
+  //for (unsigned i=0; i<NUM*2; i+=2) {
+////    eta = ETA_UPDATE(x+i+y+i+z+i);
+  //  mat_vec_mul( &u[7], idxh[i/2], eta, in, snum(x+i,y,z,tp), &aux_tmp );
+  //  aux[i/2] = sumResult(aux[i/2], aux_tmp);
+  //}
+  if (threadIdx.x <= 1)
+    for (unsigned i=0; i<NUM*2; i+=2)
+      snum_vec[i/2] = snum(x+i,y,z,tp);
+
+  tensor_mat_vec_mul(&u[7], idxh, in, snum_vec, aux_tmp);
+  
+  for (unsigned i=0; i<NUM*2; i+=2)
+    aux[i/2] = sumResult(aux[i/2], aux_tmp[i/2]);
 
 //////////////////////////////////////////////////////////////////////////////////////////////
   
   eta = 1;
-  for (unsigned i=0; i<NUM*2; i+=2) {
-    conjmat_vec_mul( &u[0], snum(xm[i/2],y,z,t), eta, in, snum(xm[i/2],y,z,t), &aux_tmp );
-    aux[i/2] = subResult(aux[i/2], aux_tmp);
-  }
+  //for (unsigned i=0; i<NUM*2; i+=2) {
+  //  conjmat_vec_mul( &u[0], snum(xm[i/2],y,z,t), eta, in, snum(xm[i/2],y,z,t), &aux_tmp );
+  //  aux[i/2] = subResult(aux[i/2], aux_tmp);
+  //}
+  if (threadIdx.x <= 1)
+    for (unsigned i=0; i<NUM*2; i+=2)
+      snum_vec[i/2] = snum(xm[i/2],y,z,t);
+
+  tensor_mat_vec_mul(&u[0], snum_vec, in, snum_vec, aux_tmp);
+  
+  for (unsigned i=0; i<NUM*2; i+=2)
+    aux[i/2] = subResult(aux[i/2], aux_tmp[i/2]);
 
 //  eta = 1 - ( 2*(x & 0x1) ); // if (x % 2 = 0) eta = 1 else -1
-  for (unsigned i=0; i<NUM*2; i+=2) {
-//    eta = ETA_UPDATE(x+i);
-    conjmat_vec_mul( &u[2], snum(x+i,ym,z,t), eta, in, snum(x+i,ym,z,t), &aux_tmp );
-    aux[i/2] = subResult(aux[i/2], aux_tmp);
-  }
+  //for (unsigned i=0; i<NUM*2; i+=2) {
+////    eta = ETA_UPDATE(x+i);
+  //  conjmat_vec_mul( &u[2], snum(x+i,ym,z,t), eta, in, snum(x+i,ym,z,t), &aux_tmp );
+  //  aux[i/2] = subResult(aux[i/2], aux_tmp);
+  //}
+  if (threadIdx.x <= 1)
+    for (unsigned i=0; i<NUM*2; i+=2)
+      snum_vec[i/2] = snum(x+i,ym,z,t);
+
+  tensor_mat_vec_mul(&u[2], snum_vec, in, snum_vec, aux_tmp);
+  
+  for (unsigned i=0; i<NUM*2; i+=2)
+    aux[i/2] = subResult(aux[i/2], aux_tmp[i/2]);
 
 //  eta = 1 - ( 2*((x+y) & 0x1) );
-  for (unsigned i=0; i<NUM*2; i+=2) {
-//    eta = ETA_UPDATE(x+i+y+i);
-    conjmat_vec_mul( &u[4], snum(x+i,y,zm,t), eta, in, snum(x+i,y,zm,t), &aux_tmp);
-    aux[i/2] = subResult(aux[i/2], aux_tmp);
-  }
+  //for (unsigned i=0; i<NUM*2; i+=2) {
+////    eta = ETA_UPDATE(x+i+y+i);
+  //  conjmat_vec_mul( &u[4], snum(x+i,y,zm,t), eta, in, snum(x+i,y,zm,t), &aux_tmp);
+  //  aux[i/2] = subResult(aux[i/2], aux_tmp);
+  //}
+  if (threadIdx.x <= 1)
+    for (unsigned i=0; i<NUM*2; i+=2)
+      snum_vec[i/2] = snum(x+i,y,zm,t);
+
+  tensor_mat_vec_mul(&u[4], snum_vec, in, snum_vec, aux_tmp);
+  
+  for (unsigned i=0; i<NUM*2; i+=2)
+    aux[i/2] = subResult(aux[i/2], aux_tmp[i/2]);
 
 //  eta = 1 - ( 2*((x+y+z) & 0x1) );
-  for (unsigned i=0; i<NUM*2; i+=2) {
-//    eta = ETA_UPDATE(x+i+y+i+z+i);
-    conjmat_vec_mul( &u[6], snum(x+i,y,z,tm), eta, in, snum(x+i,y,z,tm), &aux_tmp );
-    aux[i/2] = subResult(aux[i/2], aux_tmp);
-  }
+  //for (unsigned i=0; i<NUM*2; i+=2) {
+////    eta = ETA_UPDATE(x+i+y+i+z+i);
+  //  conjmat_vec_mul( &u[6], snum(x+i,y,z,tm), eta, in, snum(x+i,y,z,tm), &aux_tmp );
+  //  aux[i/2] = subResult(aux[i/2], aux_tmp);
+  //}
+  if (threadIdx.x <= 1)
+    for (unsigned i=0; i<NUM*2; i+=2)
+      snum_vec[i/2] = snum(x+i,y,z,tm);
+
+  tensor_mat_vec_mul(&u[6], snum_vec, in, snum_vec, aux_tmp);
+  
+  for (unsigned i=0; i<NUM*2; i+=2)
+    aux[i/2] = subResult(aux[i/2], aux_tmp[i/2]);
 
 //////////////////////////////////////////////////////////////////////////////////////////////
 
-  for (unsigned i=0; i<NUM; i++) {
-    out->c0[idxh[i]] = make_cuDoubleComplex(cuCreal(aux[i].c0)*0.5, cuCimag(aux[i].c0)*0.5);
-    out->c1[idxh[i]] = make_cuDoubleComplex(cuCreal(aux[i].c1)*0.5, cuCimag(aux[i].c1)*0.5);
-    out->c2[idxh[i]] = make_cuDoubleComplex(cuCreal(aux[i].c2)*0.5, cuCimag(aux[i].c2)*0.5);
+  if (threadIdx.x <= 1){
+    for (unsigned i=0; i<NUM; i++) {
+      out->c0[idxh[i]] = make_cuDoubleComplex(cuCreal(aux[i].c0)*0.5, cuCimag(aux[i].c0)*0.5);
+      out->c1[idxh[i]] = make_cuDoubleComplex(cuCreal(aux[i].c1)*0.5, cuCimag(aux[i].c1)*0.5);
+      out->c2[idxh[i]] = make_cuDoubleComplex(cuCreal(aux[i].c2)*0.5, cuCimag(aux[i].c2)*0.5);
+    }
   }
 }
 

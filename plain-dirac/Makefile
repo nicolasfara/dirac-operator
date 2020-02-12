@@ -31,7 +31,7 @@ cuda: common-cuda.h
 cuda-8: common-cuda.h
 	nvcc $(LATTICE) $(CC_CFLAGS) main-8.cu -o dirac-operator-8
 
-tc: common-cuda.h tensor-core.h
+tc: common-cuda.h
 	nvcc $(LATTICE) $(CC_CFLAGS_V) main-tc.cu -o dirac-operator-tc
 
 plain: common-acc.h
